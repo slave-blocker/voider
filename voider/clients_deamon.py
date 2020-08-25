@@ -24,9 +24,10 @@ def worker(num):
                 Lines = file.read().splitlines()
                 name = cert
                 print(Lines)
-                domain = Lines[0][1:]
-                username = Lines[1][1:]
-                password = Lines[2][1:]
+                subnetID = Lines[0][1]
+                domain = Lines[1][1:]
+                username = Lines[2][1:]
+                password = Lines[3][1:]
     
     localpath = home + '/.config/voider/certs/' + str(num) + '/ext_ip/'
     while True :
@@ -48,13 +49,14 @@ def worker(num):
                 print("ping succeeded")
                 if first :
                     first = False
-                    #out of the tunnel :
-                    subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "PREROUTING", "-i", "tun0", "-d", '172.17.' + ? + '.1', "-p", "all", "-j", "DNAT", "--to-destination", "172.16.1.1"])
-                    subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", 'veth' + str(num), "-j", "SNAT", "--to-source", '10.' + str(num) + '.1.1'])
+                    #into the netspace :
+                    subprocess.run(["ip", "route", "add", '10.' + str(num) + '.1.1', "via", '172.30.' + str(num) + '.2', "dev", 'veth-br' + str(num)])
                     #into the tunnel :
                     subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "PREROUTING", "-i", 'veth' + str(num), "-d", '10.' + str(num) + '.1.1', "-p", "all", "-j", "DNAT", "--to-destination", "172.17.1.1"])
-                    subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", "tun0", "-j", "SNAT", "--to-source", '172.17.' + ? + '.1'])
-
+                    subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", "tun0", "-s", "172.16.1.1", "-j", "SNAT", "--to-source", '172.17.' + subnetID + '.1'])
+                    #out of the tunnel :
+                    subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "PREROUTING", "-i", "tun0", "-d", '172.17.' + subnetID + '.1', "-p", "all", "-j", "DNAT", "--to-destination", "172.16.1.1"])
+                    subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", 'veth' + str(num), "-s", "172.17.1.1", "-j", "SNAT", "--to-source", '10.' + str(num) + '.1.1'])
             else :
                 print("ping failed")
             time.sleep(15)

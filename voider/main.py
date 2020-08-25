@@ -116,9 +116,9 @@ if choice == '3' :
             file.writelines(List)
         file.close()
         os.chdir('/etc/openvpn/')
-        if not os.path.exists("/etc/openvpn/backup.conf") :
-            file_obj  = open("/etc/openvpn/backup.conf", "w+")
-            copyfile("/etc/openvpn/server.conf", "/etc/openvpn/backup.conf")
+        if not os.path.exists("/etc/openvpn/backup") :
+            file_obj  = open("/etc/openvpn/backup", "w+")
+            copyfile("/etc/openvpn/server.conf", "/etc/openvpn/backup")
             file_obj.close()
         route = '\nroute 172.17.' + str(index + 1) + '.1 255.255.255.255 172.31.0.' + str(index + 1)
         mymodule.appendRoute( home, route)
@@ -128,6 +128,7 @@ if choice == '3' :
         with open(name + '.ovpn') as file:
             List2 = file.readlines()
         file.close()
+        List1.insert(0, '#' + str(index + 1) + '\n')
         with open(name + '.ovpn', '+w') as file:
             file.writelines(List1)
             file.writelines(List2)
@@ -146,9 +147,9 @@ if choice == '3' :
             file.writelines(List)
         file.close()
         os.chdir('/etc/openvpn/')
-        if not os.path.exists("/etc/openvpn/backup.conf") :
-            file_obj  = open("/etc/openvpn/backup.conf", "w+")
-            copyfile("/etc/openvpn/server.conf", "/etc/openvpn/backup.conf")
+        if not os.path.exists("/etc/openvpn/backup") :
+            file_obj  = open("/etc/openvpn/backup", "w+")
+            copyfile("/etc/openvpn/server.conf", "/etc/openvpn/backup")
             file_obj.close()
         route = '\nroute 172.17.' + str(index + 1) + '.1 255.255.255.255 172.31.0.' + str(index + 1)
         mymodule.appendRoute( home, route)
@@ -158,6 +159,7 @@ if choice == '3' :
         with open(name + '.ovpn') as file:
             List2 = file.readlines()
         file.close()
+        List1.insert(0, '#' + str(index + 1) + '\n')
         with open(name + '.ovpn', '+w') as file:
             file.writelines(List1)
             file.writelines(List2)

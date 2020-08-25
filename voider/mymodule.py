@@ -77,7 +77,7 @@ def appendRoute( home, route = None):
             List.append('\nroute 172.17.1.' + str(j) + ' 255.255.255.255')
         j = j + 1
     
-    with open('/etc/openvpn/backup.conf') as file:
+    with open('/etc/openvpn/backup') as file:
         Lines = file.readlines()
     file.close()
     for routes in List :
