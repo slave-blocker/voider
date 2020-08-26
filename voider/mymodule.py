@@ -129,9 +129,9 @@ def Download(username, password, localpath, host):
     return
 # paramiko.util.log_to_file("paramiko.log")
 
-def ping(host):
+def ping(host, netns):
     try:
-        subprocess.run(["ping", "-c", "1", "-W", "3", host], check=True)
+        subprocess.run(["ip", "netns", "exec", 'netns' + str(netns), "ping", "-c", "1", "-W", "3", host], check=True)
         return True
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
         return False

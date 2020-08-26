@@ -5,6 +5,7 @@ import time
 import mymodule
 import socket
 import subprocess
+import sqlite3
 from pathlib import Path
 from shutil import copyfile
 
@@ -72,8 +73,8 @@ if choice == '1' :
                 print('yo' + str(index + 1)) 
                 mymodule.modify( "occupants", (index + 1), True, cert)
     if done == False :
-        os.mkdir( home + '/.config/voider/certs/' + str(index + 1), 0o700 )
-        os.mkdir( home + '/.config/voider/certs/' + str(index + 1) + '/ext_ip', 0o700 )
+        os.mkdir( home + '/.config/voider/certs/' + str(index + 1), 0o755 )
+        os.mkdir( home + '/.config/voider/certs/' + str(index + 1) + '/ext_ip', 0o755 )
         os.rename(home + '/.config/voider/certs/new/' + cert, home + '/.config/voider/certs/' + str(index + 1) + '/' + cert )
         mymodule.modify( "occupants", (index + 1), True, cert)
         
@@ -98,72 +99,39 @@ if choice == '2' :
 
 if choice == '3' :
     name = input("Enter a Name for the Client:")
-    choice = input("use a password for the cert ? (y/n)")
     with open(home + '/.config/voider/self/creds') as file_obj :
         List1 = file_obj.readlines()
-    List1.append('\n')
-    print(List1)
     file_obj.close()
-    if choice == 'y' :
-        subprocess.run(["pivpn", "add", "-n", name])
-        os.chdir(home + '/.config/voider/self/')
-        index = mymodule.findfirst("occupants")
-        List = ['ifconfig-push 172.31.0.' + str(index + 1) + ' 255.255.255.0\n',
-        "push \"route 172.17.1.1 255.255.255.255 172.31.0.1\"\n",
-        'iroute 172.17.' + str(index + 1) + '.1' + ' 255.255.255.255']
-        os.chdir('/etc/openvpn/ccd/')
-        with open(name, 'w') as file:
-            file.writelines(List)
-        file.close()
-        os.chdir('/etc/openvpn/')
-        if not os.path.exists("/etc/openvpn/backup") :
-            file_obj  = open("/etc/openvpn/backup", "w+")
-            copyfile("/etc/openvpn/server.conf", "/etc/openvpn/backup")
-            file_obj.close()
-        route = '\nroute 172.17.' + str(index + 1) + '.1 255.255.255.255 172.31.0.' + str(index + 1)
-        mymodule.appendRoute( home, route)
-        os.chdir(home + '/.config/voider/self/')
-        mymodule.modify("occupants", (index + 1), True, name)
-        os.chdir(home + '/ovpns/')
-        with open(name + '.ovpn') as file:
-            List2 = file.readlines()
-        file.close()
-        List1.insert(0, '#' + str(index + 1) + '\n')
-        with open(name + '.ovpn', '+w') as file:
-            file.writelines(List1)
-            file.writelines(List2)
-        file.close()
-        
-
-    else :
-        subprocess.run(["pivpn", "add", "-n", name, "nopass"])
-        os.chdir(home + '/.config/voider/self/')
-        index = mymodule.findfirst("occupants")
-        List = ['ifconfig-push 172.31.0.' + str(index + 1) + ' 255.255.255.0\n',
-        "push \"route 172.17.1.1 255.255.255.255 172.31.0.1\"\n",
-        'iroute 172.17.' + str(index + 1) + '.1' + ' 255.255.255.255']
-        os.chdir('/etc/openvpn/ccd/')
-        with open(name, 'w') as file:
-            file.writelines(List)
-        file.close()
-        os.chdir('/etc/openvpn/')
-        if not os.path.exists("/etc/openvpn/backup") :
-            file_obj  = open("/etc/openvpn/backup", "w+")
-            copyfile("/etc/openvpn/server.conf", "/etc/openvpn/backup")
-            file_obj.close()
-        route = '\nroute 172.17.' + str(index + 1) + '.1 255.255.255.255 172.31.0.' + str(index + 1)
-        mymodule.appendRoute( home, route)
-        os.chdir(home + '/.config/voider/self/')
-        mymodule.modify("occupants", (index + 1), True, name)
-        os.chdir(home + '/ovpns/')
-        with open(name + '.ovpn') as file:
-            List2 = file.readlines()
-        file.close()
-        List1.insert(0, '#' + str(index + 1) + '\n')
-        with open(name + '.ovpn', '+w') as file:
-            file.writelines(List1)
-            file.writelines(List2)
-        file.close()
+    List1.append('\n')
+    #print(List1)
+    subprocess.run(["pivpn", "add", "-n", name, "nopass"])
+    os.chdir(home + '/.config/voider/self/')
+    index = mymodule.findfirst("occupants")
+    List = ['ifconfig-push 172.31.0.' + str(index + 1) + ' 255.255.255.0\n',
+    "push \"route 172.17.1.1 255.255.255.255 172.31.0.1\"\n",
+    'iroute 172.17.' + str(index + 1) + '.1' + ' 255.255.255.255']
+    os.chdir('/etc/openvpn/ccd/')
+    with open(name, 'w') as file:
+        file.writelines(List)
+    file.close()
+    os.chdir('/etc/openvpn/')
+    if not os.path.exists("/etc/openvpn/backup") :
+        file_obj  = open("/etc/openvpn/backup", "w+")
+        copyfile("/etc/openvpn/server.conf", "/etc/openvpn/backup")
+        file_obj.close()
+    route = '\nroute 172.17.' + str(index + 1) + '.1 255.255.255.255 172.31.0.' + str(index + 1)
+    mymodule.appendRoute( home, route)
+    os.chdir(home + '/.config/voider/self/')
+    mymodule.modify("occupants", (index + 1), True, name)
+    os.chdir(home + '/ovpns/')
+    with open(name + '.ovpn') as file:
+        List2 = file.readlines()
+    file.close()
+    List1.insert(0, '#' + str(index + 1) + '\n')
+    with open(name + '.ovpn', '+w') as file:
+        file.writelines(List1)
+        file.writelines(List2)
+    file.close()
 
 if choice == '4' :
     print("please type the index \n")

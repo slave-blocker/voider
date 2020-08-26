@@ -7,19 +7,19 @@ import mymodule
 import subprocess
 import threading
 from pathlib import Path
-
+"""
 def connect(ip, cert, localpath, netns):
     os.chdir(localpath)
-    subprocess.run(["ip", "netns", "exec", 'netns' + str(netns),"openvpn", "--remote", ip, "1194", "--config", cert])
+    subprocess.run(["ip", "netns", "exec", 'netns' + str(netns),"openvpn", "--remote", ip, "1194", "--config", cert, "&"], shell=True)
     return
-
+"""
 def worker(num):
     home = str(Path.home())
     localpath = home + '/.config/voider/certs/' + str(num) + '/'
     os.chdir(localpath)
     for cert in os.listdir('.') : 
         if os.path.isfile(cert) :
-            print(cert)
+            #print(cert)
             with open(cert) as file:
                 Lines = file.read().splitlines()
                 name = cert
@@ -29,8 +29,9 @@ def worker(num):
                 username = Lines[2][1:]
                 password = Lines[3][1:]
     
-    localpath = home + '/.config/voider/certs/' + str(num) + '/ext_ip/'
+    first = True
     while True :
+        localpath = home + '/.config/voider/certs/' + str(num) + '/ext_ip/'
         mymodule.Download(username, password, localpath + 'ext_ip', domain)
         os.chdir(localpath)
         with open("ext_ip") as file:
@@ -39,18 +40,24 @@ def worker(num):
         localpath = home + '/.config/voider/self/'
         subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", mymodule.getint_out( localpath ), "-s", ip1, "-j", "DNAT", "--to", '172.30.' + str(num) + '.2'])
         localpath = home + '/.config/voider/certs/' + str(num) + '/'
-        t = threading.Thread(target=connect, args=(ip1, name, localpath, num,))
-        t.start()
+        os.chdir(localpath)
+        proc = subprocess.Popen(["ip", "netns", "exec", 'netns' + str(num),"openvpn", "--remote", ip1, "1194", "--config", name])
         time.sleep(20)
-        first = True
-        while True :
+        count = 0
+        connected = True
+        reconnect = True
+        while connected :
             print('Worker' + str(num))
-            if mymodule.ping("172.31.0.1") :
+            if mymodule.ping("172.31.0.1", num) :
                 print("ping succeeded")
+                count = 0
+                time.sleep(15)
                 if first :
                     first = False
                     #into the netspace :
-                    subprocess.run(["ip", "route", "add", '10.' + str(num) + '.1.1', "via", '172.30.' + str(num) + '.2', "dev", 'veth-br' + str(num)])
+                    subprocess.run(["ip", "route", "add", '10.' + str(num) + '.1.1', "via", '172.30.' + str(num) + '.2'])
+                if reconnect :
+                    reconnect = False
                     #into the tunnel :
                     subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "PREROUTING", "-i", 'veth' + str(num), "-d", '10.' + str(num) + '.1.1', "-p", "all", "-j", "DNAT", "--to-destination", "172.17.1.1"])
                     subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", "tun0", "-s", "172.16.1.1", "-j", "SNAT", "--to-source", '172.17.' + subnetID + '.1'])
@@ -58,8 +65,12 @@ def worker(num):
                     subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "PREROUTING", "-i", "tun0", "-d", '172.17.' + subnetID + '.1', "-p", "all", "-j", "DNAT", "--to-destination", "172.16.1.1"])
                     subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", 'veth' + str(num), "-s", "172.17.1.1", "-j", "SNAT", "--to-source", '10.' + str(num) + '.1.1'])
             else :
+                if count == 3 :
+                    proc.terminate()
+                    connected = False
                 print("ping failed")
-            time.sleep(15)
+                time.sleep(5)
+                count = count + 1
     return
 
 
@@ -101,6 +112,7 @@ for line in Lines :
         subprocess.run(["ip", "netns", "exec", 'netns' + str(netns), "ip", "link", "set", "dev", "lo", "up"])
         subprocess.run(["ip", "netns", "exec", 'netns' + str(netns), "ip", "link", "set", "dev", 'veth' + str(netns), "up"])
         subprocess.run(["ip", "netns", "exec", 'netns' + str(netns), "ip", "route", "add", "default", "via", '172.30.' + str(netns) + '.1', "dev", 'veth' + str(netns)])
+        subprocess.run(["ip", "netns", "exec", 'netns' + str(netns), "iptables", "-A", "OUTPUT", "-o", 'veth' + str(netns), "-d", "172.31.0.1", "-j", "DROP"])
         netns = netns + 1
 
 
