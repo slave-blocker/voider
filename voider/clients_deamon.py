@@ -7,12 +7,7 @@ import mymodule
 import subprocess
 import threading
 from pathlib import Path
-"""
-def connect(ip, cert, localpath, netns):
-    os.chdir(localpath)
-    subprocess.run(["ip", "netns", "exec", 'netns' + str(netns),"openvpn", "--remote", ip, "1194", "--config", cert, "&"], shell=True)
-    return
-"""
+
 def worker(num):
     home = str(Path.home())
     localpath = home + '/.config/voider/certs/' + str(num) + '/'
@@ -34,14 +29,16 @@ def worker(num):
         localpath = home + '/.config/voider/certs/' + str(num) + '/ext_ip/'
         mymodule.Download(username, password, localpath + 'ext_ip', domain)
         os.chdir(localpath)
+        if not first :
+            subprocess.run(["iptables", "-t", "nat", "-D", "PREROUTING", "-i", mymodule.getint_out( localpath ), "-s", ip, "-j", "DNAT", "--to", '172.30.' + str(num) + '.2'])
         with open("ext_ip") as file:
-            ip1 = file.read()
+            ip = file.read()
         print("go")
         localpath = home + '/.config/voider/self/'
-        subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", mymodule.getint_out( localpath ), "-s", ip1, "-j", "DNAT", "--to", '172.30.' + str(num) + '.2'])
+        subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", mymodule.getint_out( localpath ), "-s", ip, "-j", "DNAT", "--to", '172.30.' + str(num) + '.2'])
         localpath = home + '/.config/voider/certs/' + str(num) + '/'
         os.chdir(localpath)
-        proc = subprocess.Popen(["ip", "netns", "exec", 'netns' + str(num),"openvpn", "--remote", ip1, "1194", "--config", name])
+        proc = subprocess.Popen(["ip", "netns", "exec", 'netns' + str(num),"openvpn", "--remote", ip, "1194", "--config", name])
         time.sleep(20)
         count = 0
         connected = True
@@ -54,7 +51,7 @@ def worker(num):
                 time.sleep(15)
                 if first :
                     first = False
-                    #into the netspace :
+                    #into the network namespace :
                     subprocess.run(["ip", "route", "add", '10.' + str(num) + '.1.1', "via", '172.30.' + str(num) + '.2'])
                 if reconnect :
                     reconnect = False

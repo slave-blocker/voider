@@ -49,7 +49,7 @@ with open("ext_ip") as file:
     ip1 = file.read()
 
 print(ip1)
-"""
+
 while(1):
 
     ip2 = urllib.request.urlopen('https://ident.me').read().decode('utf8')
@@ -77,4 +77,4 @@ while(1):
         if transport: transport.close()
     
     time.sleep(15)
-"""
+

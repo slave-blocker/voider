@@ -44,10 +44,13 @@ if not os.path.exists(home + '/.config/voider/self/creds') :
 
 print("choose option :")
 
+print("to quit - just press enter.")
 print("1 - create a client connection to anouther server")
 print("2 - delete a client connection to anouther server")
 print("3 - call pivpn, to add a client connection to this server")
 print("4 - call pivpn, to revoke a client connection to this server")
+
+print(" after each executed option a reboot is done .")
 
 choice = input("Enter choice integer : ")
 
@@ -77,7 +80,7 @@ if choice == '1' :
         os.mkdir( home + '/.config/voider/certs/' + str(index + 1) + '/ext_ip', 0o755 )
         os.rename(home + '/.config/voider/certs/new/' + cert, home + '/.config/voider/certs/' + str(index + 1) + '/' + cert )
         mymodule.modify( "occupants", (index + 1), True, cert)
-        
+    subprocess.run(["reboot"])
 
 if choice == '2' :
     print("please type the index \n")
@@ -95,6 +98,7 @@ if choice == '2' :
                     if os.path.isfile(cert) :
                         print(cert)
                         os.remove(cert)
+    subprocess.run(["reboot"])
 
 
 if choice == '3' :
@@ -132,6 +136,7 @@ if choice == '3' :
         file.writelines(List1)
         file.writelines(List2)
     file.close()
+    subprocess.run(["reboot"])
 
 if choice == '4' :
     print("please type the index \n")
@@ -143,3 +148,4 @@ if choice == '4' :
     mymodule.modify( "occupants", int(index), False ) 
     mymodule.appendRoute( home)
     subprocess.run(["pivpn", "revoke", "-y", name])
+    subprocess.run(["reboot"])
