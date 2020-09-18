@@ -1,5 +1,5 @@
 #! /bin/bash
 
-sudo apt-get install pivpn
+curl -L https://install.pivpn.io | bash
 sudo apt-get install python3-paramiko
 
