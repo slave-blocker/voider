@@ -193,15 +193,47 @@ def isAlive(vps_ip, username, password, peer, localpath):
             time.sleep(60)
     return True
             
-def send(sock, addr, message):
+def send(sock, addr, message, event):
     count = 0
     global ended
-    while count < 24 and not ended:
+    while count < 24 and not event.is_set():
         sock.sendto(message, addr)
         time.sleep(5)
         count = count + 1
 
+def receive(sock, message, peer, event):
+    data, addr = sock.recvfrom(1024)
+    print('peer received from vps : {} {}'.format(addr, data))
+    temp = msg_to_addr_and_pair(data)
+    addr = (temp[0], temp[1])
+    pair = [temp[2], temp[3]]
 
+    print(pair[0] + ' ' + pair[1])
+
+    if pair[0] == peer and pair[1] == self:
+        event.set()
+        sock.sendto(message, addr)
+
+        data, addr = sock.recvfrom(1024)
+        print('punch received: {} {}'.format(addr, data))
+
+        sock.sendto(message, addr)
+
+        data, addr = sock.recvfrom(1024)
+        print('punch received: {} {}'.format(addr, data))
+
+        sock.close()
+    
+        result = [True, addr]
+        
+        return result
+    else:
+        result = [False, addr]
+        
+        return result
+    
+    
+    
 def ping(host, netns):
     try:
         subprocess.run(["ip", "netns", "exec", 'netns' + str(netns), "ping", "-c", "1", "-W", "3", host], check=True)

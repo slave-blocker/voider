@@ -16,61 +16,49 @@ def udp_punch(access, self, localpath, idx):
     password = access[2][1:]
     client = access[5][1:]
     vps_port = access[6][1:]
-    local_port = 9866 + idx
-    
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    sock.bind(('', local_port))
+        
     addr = (vps_ip, vps_port)
     message = b'\'' + self + ' ' + client
 
-    subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-p", "UDP", "--dport", local_port, "-j", "REDIRECT", "--to-port", "1194"])
-
     while True :
         if mymodule.isAlive(vps_ip, username, password, client, localpath):
-
-            threading.Thread(target=mymodule.send, args=(sock, addr, message, )).start()
-
-            data, addr = sock.recvfrom(1024)
-            print('client received from vps : {} {}'.format(addr, data))
-            temp = msg_to_addr_and_pair(data)
-            addr = (temp[0], temp[1])
-            pair = [temp[2], temp[3]]
-    
-            print(pair[0] + ' ' + pair[1])
-
-            if pair[0] == client and pair[1] == self:
-                ended = True
-                sock.sendto(message, addr)
-
-                data, addr = sock.recvfrom(1024)
-                print('punch received: {} {}'.format(addr, data))
-    
-                sock.sendto(message, addr)
-
-                data, addr = sock.recvfrom(1024)
-                print('punch received: {} {}'.format(addr, data))
-
-                sock.close()                
+            
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(('', 0))
+            local_port = sock.getsockname()[1]
+            
+            e = threading.Event()
+            done = False
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                executor.submit(mymodule.send, sock, addr, message, e)
+                future = executor.submit(mymodule.receive, sock, message, client, e)
+                result = future.result()
                 
-                time.sleep(10)
+                if result[0] :
                 
-                if mymodule.ping2('172.31.0.' + idx):
-                    connected = True
+                    subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-p", "UDP", "--dport", local_port, "-j", "REDIRECT", "--to-port", "1194"])
+
+                    time.sleep(20)
                 
-                first = True
-                count = 0
-                while connected :
-                    if mymodule.ping2('172.31.0.' + idx) :
-                        print("ping succeeded")
-                        count = 0
-                        time.sleep(15)
+                    if mymodule.ping2('172.31.0.' + idx):
+                        connected = True
                     else :
-                        if count == 3 :
-                            connected = False
-                        print("ping failed")
-                        time.sleep(5)
-                        count = count + 1
+                        connected = False
+                        subprocess.run(["iptables", "-t", "nat", "-D", "PREROUTING", "-p", "UDP", "--dport", local_port, "-j", "REDIRECT", "--to-port", "1194"])
+                    count = 0
+                    while connected :
+                        if mymodule.ping2('172.31.0.' + idx) :
+                            print("ping succeeded")
+                            count = 0
+                            time.sleep(15)
+                        else :
+                            if count == 3 :
+                                connected = False
+                            else :
+                                print("ping failed")
+                                time.sleep(5)
+                                count = count + 1
 
 def connect_to_clients():
     
