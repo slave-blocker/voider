@@ -28,6 +28,31 @@ if not os.path.exists(home + '/.config/voider/self/int_out') :
     file.write(choice)
     file.close()
     
+if not os.path.exists(home + '/.config/voider/self/phone_number') :
+    print("The available range for the phone number is from 172.16.0.1 \n.")
+    print("                                            to   172.28.255.253 \n.")
+    x = input("Please type the 1st octet, from 16 to 28 :")
+    if not int(x) >= 16 and not int(x) <= 28 :
+        print("invalid number")
+    else:
+        y = input("Please type the 2nd octet, from 0 to 255 :")
+        if not int(y) >= 0 and not int(y) <= 255 :
+            print("invalid number")
+        else:
+            print("This last input is tricky, you can do it!")
+            print("(your input) mod 4 must be 1.")
+            print("Or in other words it's the first ip address from the /30 ...")
+            z = input("Please type the 3rd octet, from 1 to 253 :")
+            if not int(z) >= 1 and not int(z) <= 253 and not (int(z) % 4) == 1 :
+                print("invalid number")
+            else:
+                phone_number = '172.' + x + '.' + y + '.' + z
+                gateway = '172.' + x + '.' + y + '.' + str(int(z) + 1)
+                L = [phone_number + '\n', gateway]
+                file = open(home + '/.config/voider/self/phone_number', "w+")
+                file.writelines(L)
+                file.close()
+    
 if not os.path.exists(home + '/.config/voider/self/creds') :
     print("Sftp server not defined.")
     sftp = []
@@ -36,19 +61,20 @@ if not os.path.exists(home + '/.config/voider/self/creds') :
     choice = input("Please type the read only user for the vps :")
     sftp.append('#' + choice + '\n')
     choice = input("Please type the read only password for the vps :")
-    sftp.append('#' + choice )
+    sftp.append('#' + choice + '\n')
     choice = input("Please type the read write user for the vps :")
     sftp.append('#' + choice + '\n')
     choice = input("Please type the read write password for the vps :")
-    sftp.append('#' + choice )
+    sftp.append('#' + choice + '\n')
     choice = input("Please type the folder's name in the vps :")
-    sftp.append('#' + choice )
+    sftp.append('#' + choice + '\n')
     choice = input("Please type the port number that the vps is listening on:")
-    sftp.append('#' + choice )
+    sftp.append('#' + choice)
     file  = open(home + '/.config/voider/self/creds', "w+")
     file.writelines(sftp)
     file.close()
-    del sftp[4:5]
+    del sftp[3]
+    del sftp[3]
     file  = open(home + '/.config/voider/self/access_creds', "w+")
     file.writelines(sftp)
     file.close()
@@ -75,7 +101,7 @@ if choice == '1' :
     print('place cert inside' + home + '/.config/voider/certs/New/')
     os.chdir(home + '/.config/voider/certs/')
     index = mymodule.findfirst("occupants")
-    os.chdir(home + '/.config/voider/certs/new/')
+    os.chdir(home + '/.config/voider/certs/New/')
     input("Press enter when done")
     
     for cert in os.listdir('.') : 
@@ -88,14 +114,14 @@ if choice == '1' :
         if os.path.isdir(name) :
             print(name)
             if(name == str(index + 1)):
-                os.rename(home + '/.config/voider/certs/new/' + cert, home + '/.config/voider/certs/' + str(index + 1) + '/' + cert )
+                os.rename(home + '/.config/voider/certs/New/' + cert, home + '/.config/voider/certs/' + str(index + 1) + '/' + cert )
                 done = True
                 print('yo' + str(index + 1)) 
                 mymodule.modify( "occupants", (index + 1), True, cert)
     if done == False :
         os.mkdir( home + '/.config/voider/certs/' + str(index + 1), 0o755 )
         os.mkdir( home + '/.config/voider/certs/' + str(index + 1) + '/DoA', 0o755 )
-        os.rename(home + '/.config/voider/certs/new/' + cert, home + '/.config/voider/certs/' + str(index + 1) + '/' + cert )
+        os.rename(home + '/.config/voider/certs/New/' + cert, home + '/.config/voider/certs/' + str(index + 1) + '/' + cert )
         mymodule.modify( "occupants", (index + 1), True, cert)
     subprocess.run(["reboot"])
 
@@ -120,10 +146,9 @@ if choice == '2' :
 
 if choice == '3' :
     name = input("Enter a Name for the Client:")
-    with open(home + '/.config/voider/self/creds') as file :
+    with open(home + '/.config/voider/self/access_creds') as file :
         List1 = file.readlines()
     file.close()
-    del List1[4:5]
     List1.append('\n')
     #print(List1)
     subprocess.run(["pivpn", "add", "-n", name, "nopass"])
@@ -205,7 +230,7 @@ if choice == '6' :
     file.close()
     
     for cert in certs:
-        if cert[0] == '1'
+        if cert[0] == '1':
             print(cert[2:])
     choice = input("Enter certificate's name : ")
 

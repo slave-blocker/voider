@@ -1,0 +1,14 @@
+#! /bin/bash
+
+for i in /proc/sys/net/ipv4/conf/*/rp_filter ; do
+echo 0 > $i
+done
+
+for i in /proc/sys/net/ipv4/conf/*/accept_local ; do
+echo 1 > $i
+done
+
+for i in /proc/sys/net/ipv4/conf/*/forwarding ; do
+echo 1 > $i
+done
+

@@ -7,39 +7,42 @@ import subprocess
 import threading
 import concurrent.futures
 from pathlib import Path
+import util
 
-ended = False
 
-def udp_punch(vps_ip, vps_port, server):
+
+def udp_punch(vps_ip, vps_port, server, num):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(('', 0))
+    sock.settimeout(120)
     local_port = sock.getsockname()[1]
+    address = (vps_ip, int(vps_port))
     
-    addr = (vps_ip, vps_port)
-    localpath = home + '/.config/voider/self/'
-    with open("creds") as file:
+    with open(home + '/.config/voider/self/creds') as file:
         L = file.read().splitlines()
     file.close()
     
-    self = L[5]
-    message = b'\'' + self + ' ' + server
-
+    self = L[5][1:]
+    
     e = threading.Event()
+    e.clear()
+    print('punchit!' + str(local_port))
     
     with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.submit(mymodule.send, sock, addr, message, e)
-        future = executor.submit(mymodule.receive, sock, message, server, e)
+        executor.submit(mymodule.send, sock, address, self, server, e)
+        future = executor.submit(mymodule.receive_client, sock, self, server, e, num)
         result = future.result()
         result.append(local_port)
-        
+        print("final")
     return result
 
 
 
 def worker(num):
     home = str(Path.home())
-    localpath = home + '/.config/voider/certs/' + str(num) + '/'
+    global phone
+    localpath = home + '/.config/voider/certs/' + str(num)
     os.chdir(localpath)
     for cert in os.listdir('.') : 
         if os.path.isfile(cert) :
@@ -47,40 +50,41 @@ def worker(num):
             with open(cert) as file:
                 Lines = file.read().splitlines()
                 name = cert
-                print(Lines)
                 subnetID = Lines[0][1]
                 vps_ip = Lines[1][1:]
                 username = Lines[2][1:]
                 password = Lines[3][1:]
-                server = Lines[5][1:]
-                vps_port = Lines[6][1:]
+                server = Lines[4][1:]
+                vps_port = Lines[5][1:]
     first = True
     #into the network namespace :
     subprocess.run(["ip", "route", "add", '10.' + str(num) + '.1.1', "via", '172.30.' + str(num) + '.2'])
     #into the tunnel :
     subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "PREROUTING", "-i", 'veth' + str(num), "-d", '10.' + str(num) + '.1.1', "-p", "all", "-j", "DNAT", "--to-destination", "172.29.1.1"])
-    subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", "tun0", "-s", "172.16.1.5", "-j", "SNAT", "--to-source", '172.29.' + subnetID + '.1'])
+    subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", "tun0", "-s", phone[0], "-j", "SNAT", "--to-source", '172.29.' + subnetID + '.1'])
     #out of the tunnel :
-    subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "PREROUTING", "-i", "tun0", "-d", '172.29.' + subnetID + '.1', "-p", "all", "-j", "DNAT", "--to-destination", "172.16.1.5"])
+    subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "PREROUTING", "-i", "tun0", "-d", '172.29.' + subnetID + '.1', "-p", "all", "-j", "DNAT", "--to-destination", phone[0]])
     subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", 'veth' + str(num), "-s", "172.29.1.1", "-j", "SNAT", "--to-source", '10.' + str(num) + '.1.1'])
     first = True
     while True :
         if  mymodule.isAlive(vps_ip, username, password, server, localpath):
-            result = udp_punch(vps_ip, vps_port, server)
+            print("isAlive!")
+            result = udp_punch(vps_ip, vps_port, server, num)
+            print(str(result[0]))
             if result[0] :
+                print("info received")
                 addr = result[1]
                 local_port = result[2]
+                localdir = home + '/.config/voider/self/'
                 if not first :
-                    subprocess.run(["iptables", "-t", "nat", "-D", "PREROUTING", "-i", mymodule.getint_out( localpath ), "-s", temp, "-j", "DNAT", "--to", '172.30.' + str(num) + '.2'])
-                print("go")
-                localpath = home + '/.config/voider/self/'
-                subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", mymodule.getint_out( localpath ), "-s", addr[0], "-j", "DNAT", "--to", '172.30.' + str(num) + '.2'])
+                    subprocess.run(["iptables", "-t", "nat", "-D", "PREROUTING", "-i", mymodule.getint_out( localdir ), "-s", temp, "-j", "DNAT", "--to", '172.30.' + str(num) + '.2'])
+                    subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-D", "POSTROUTING", "-o", 'veth' + str(num), "-d", temp, "-j", "SNAT", "--to-source", mymodule.get_ip_address(mymodule.getint_out( localdir ))])
                 temp = addr[0]
-                localpath = home + '/.config/voider/certs/' + str(num) + '/'
-                os.chdir(localpath)
-                time.sleep(1)
-                proc = subprocess.Popen(["ip", "netns", "exec", 'netns' + str(num), "openvpn", "--lport", local_port, "--remote", addr[0], addr[1], "--config", name])
+                here = home + '/.config/voider/certs/' + str(num) + '/'
+                os.chdir(here)
+                proc = subprocess.Popen(["ip", "netns", "exec", 'netns' + str(num), "openvpn", "--lport", str(local_port), "--remote", str(addr[0]), str(addr[1]), "--config", name, "--float"])
                 time.sleep(20)
+                
                 count = 0
                 connected = True
                 while connected :
@@ -90,11 +94,11 @@ def worker(num):
                         count = 0
                         time.sleep(15)
                     else :
-                        if count == 3 :
+                        if count == 5 :
                             proc.terminate()
                             connected = False
                         else :
-                            print("ping failed")
+                            print('ping ' + str(count) + ' failed')
                             time.sleep(5)
                             count = count + 1
     return
@@ -102,14 +106,25 @@ def worker(num):
 
 home = str(Path.home())
 
-subprocess.run(["iptables", "-t", "nat", "-A", "POSTROUTING", "-o", mymodule.getint_out( home + '/.config/voider/self' ), "-j", "MASQUERADE"])
+#subprocess.run(["iptables", "-t", "nat", "-A", "POSTROUTING", "-o", mymodule.getint_out( home + '/.config/voider/self' ), "-j", "MASQUERADE"])
+
+subprocess.run(["iptables", "-t", "nat", "--flush"])
+subprocess.run(["iptables", "-t", "filter", "--flush"])
+subprocess.run(["killall", "openvpn"])
+
+
+
+with open(home + '/.config/voider/self/phone_number') as file:
+    phone = file.read().splitlines()
+file.close()
 
 
 os.chdir(home + '/.config/voider/certs')
 
 with open("occupants") as file:
     Lines = file.read().splitlines()
-        
+file.close()
+
 print(Lines) 
 
 
@@ -134,6 +149,7 @@ netns = 2
 for line in Lines :
     if line[0] == '1' :
         print(line)
+        subprocess.run(["ip", "netns", "exec", 'netns' + str(netns),"iptables", "-t", "nat", "--flush"])
         subprocess.run(["ip", "netns", "exec", 'netns' + str(netns), "ip", "addr", "add", '172.30.' + str(netns) + '.2/24', "dev", 'veth' + str(netns)])
         subprocess.run(["ip", "netns", "exec", 'netns' + str(netns), "ip", "link", "set", "dev", "lo", "up"])
         subprocess.run(["ip", "netns", "exec", 'netns' + str(netns), "ip", "link", "set", "dev", 'veth' + str(netns), "up"])

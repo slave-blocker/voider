@@ -3,7 +3,13 @@ import socket
 import os
 import subprocess
 import re
-
+import time
+import util
+import random
+from pathlib import Path
+import fcntl
+import struct
+import select
 
 def patch(home, m1, m2):
     pattern = re.compile(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
@@ -134,8 +140,24 @@ def appendRoute( home, route = None):
     if route != None : 
         Lines.append(route)
     
+    Times = []
+    for line in Lines :
+        z = False
+        if "dhcp-option" in line :
+            z = True
+        if "block-outside-dns" in line :
+            z = True
+        if "redirect-gateway" in line :
+            z = True
+        
+        if z :
+            Times.append('#' + line)
+        else :
+            Times.append(line)
+    
+    
     with open('/etc/openvpn/server.conf', 'w') as file:
-        file.writelines(Lines)
+        file.writelines(Times)
     file.close()
     return
 
@@ -180,48 +202,70 @@ def Download(username, password, localpath, remotepath, host):
 
 def isAlive(vps_ip, username, password, peer, localpath):
     isDead = True
+    localpath = localpath + '/DoA/DoA'
+    remotepath = '/' + peer + '/DoA'
     while isDead:
-        localpath = localpath + '/DoA/DoA'
-        remotepath = '/' + peer + '/DoA'
-        Download(username, password, localpath, remotepath, vps_ip):
+        Download(username, password, localpath, remotepath, vps_ip)
         with open(localpath) as file:
-            DoA = file.read()
+            DoA = file.read().splitlines()
         file.close()
-        if DoA == '1':
+        if DoA[0] == '1':
             isDead = False
         else:
             time.sleep(60)
     return True
-            
-def send(sock, addr, message, event):
+
+def send(sock, addr, self, peer, event):
+    message = self + ' ' + peer
+    message = str.encode(message)
     count = 0
-    global ended
-    while count < 24 and not event.is_set():
+    while count < 12 and not event.is_set():
+        print('gogogo ' + str(count) + self + ' ' + peer)
         sock.sendto(message, addr)
-        time.sleep(5)
+        time.sleep(random.randint(1, 10))
         count = count + 1
 
-def receive(sock, message, peer, event):
-    data, addr = sock.recvfrom(1024)
+def receive_server(sock, self, peer, event, local_port):
+    home = str(Path.home())
+    try:
+        data, addr = sock.recvfrom(1024)
+    except socket.timeout:
+        print("exceeded timeout, for info from vps")
+        event.set()
+        time.sleep(5)
+        result = [False, None]
+        return result
+    
     print('peer received from vps : {} {}'.format(addr, data))
-    temp = msg_to_addr_and_pair(data)
+    temp = util.msg_to_addr_and_pair(data)
     addr = (temp[0], temp[1])
     pair = [temp[2], temp[3]]
 
-    print(pair[0] + ' ' + pair[1])
+#    print(pair[0] + ' ' + pair[1])
+#    print("punch")
+#    print(peer + ' ' + self)
+
 
     if pair[0] == peer and pair[1] == self:
         event.set()
+        print("punch the hole through !")
+        message = self + ' ' + peer
+        message = str.encode(message)
         sock.sendto(message, addr)
-
-        data, addr = sock.recvfrom(1024)
-        print('punch received: {} {}'.format(addr, data))
-
         sock.sendto(message, addr)
+        sock.sendto(message, addr)
+        print("punch done, now rest...")
 
-        data, addr = sock.recvfrom(1024)
-        print('punch received: {} {}'.format(addr, data))
-
+        print("activate the client's nat rule .")
+        time.sleep(10)
+        sock.sendto(message, addr)
+        sock.sendto(message, addr)
+        sock.sendto(message, addr)
+        sock.sendto(message, addr)
+        sock.sendto(message, addr)
+        sock.sendto(message, addr)
+        print("just sent 6 packets")        
+        
         sock.close()
     
         result = [True, addr]
@@ -230,8 +274,60 @@ def receive(sock, message, peer, event):
     else:
         result = [False, addr]
         
-        return result
+        return result    
     
+def receive_client(sock, self, peer, event, num):
+    home = str(Path.home())
+    localdir = home + '/.config/voider/self/'
+    try:
+        data, addr = sock.recvfrom(1024)
+    except socket.timeout:
+        print("exceeded timeout, for info from vps")
+        event.set()
+        time.sleep(5)
+        result = [False, None]
+        return result
+        
+    print('peer received from vps : {} {}'.format(addr, data))
+    temp = util.msg_to_addr_and_pair(data)
+    addr = (temp[0], temp[1])
+    pair = [temp[2], temp[3]]
+
+    #print(pair[0] + ' ' + pair[1])
+    #print("punch")
+    #print(peer + ' ' + self)
+
+
+    if pair[0] == peer and pair[1] == self:
+        event.set()
+        print("punch the hole through !")
+        message = self + ' ' + peer
+        message = str.encode(message)
+        sock.sendto(message, addr)
+        sock.sendto(message, addr)
+        sock.sendto(message, addr)
+        print("punch done, now rest...")
+        time.sleep(5)
+        
+        subprocess.run(["conntrack", "-D", "-p", "UDP"])
+        subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "conntrack", "-D", "-p", "UDP"])
+        subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", getint_out( localdir ), "-s", addr[0], "-j", "DNAT", "--to", '172.30.' + str(num) + '.2'])
+        subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", 'veth' + str(num), "-d", addr[0], "-j", "SNAT", "--to-source", get_ip_address(getint_out( localdir ))])
+        subprocess.run(["conntrack", "-D", "-p", "UDP"])
+        subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "conntrack", "-D", "-p", "UDP"])
+
+        print("expecting incoming packets to activate own nat rule.")
+        time.sleep(10)
+        
+        sock.close()
+    
+        result = [True, addr]
+        
+        return result
+    else:
+        result = [False, addr]
+        
+        return result    
     
     
 def ping(host, netns):
@@ -250,3 +346,10 @@ def ping2(host):
         
         
         
+def get_ip_address(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(
+        s.fileno(),
+        0x8915,  # SIOCGIFADDR
+        struct.pack('256s', (ifname[:15].encode('utf-8')))
+    )[20:24])
