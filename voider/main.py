@@ -170,15 +170,19 @@ if choice == '3' :
     mymodule.appendRoute( home, route)
     os.chdir(home + '/.config/voider/self/')
     mymodule.modify("occupants", (index + 1), True, name)
+    mymodule.addClient(name)
     os.chdir(home + '/ovpns/')
     with open(name + '.ovpn') as file:
         List2 = file.readlines()
     file.close()
+    List3 = mymodule.changeCert(List2)
+    
     List1.insert(0, '#' + str(index + 1) + '\n')
     with open(name + '.ovpn', '+w') as file:
         file.writelines(List1)
-        file.writelines(List2)
+        file.writelines(List3)
     file.close()
+    
     subprocess.run(["reboot"])
 
 if choice == '4' :
@@ -189,6 +193,7 @@ if choice == '4' :
     index = input("Enter index integer : ")
     name = mymodule.getname( "occupants", int(index) )
     mymodule.modify( "occupants", int(index), False ) 
+    mymodule.delClient(name)
     mymodule.appendRoute( home)
     subprocess.run(["pivpn", "revoke", "-y", name])
     subprocess.run(["reboot"])

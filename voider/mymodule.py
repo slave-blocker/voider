@@ -143,23 +143,106 @@ def appendRoute( home, route = None):
     Times = []
     for line in Lines :
         z = False
+        z2 = False
+
         if "dhcp-option" in line :
             z = True
         if "block-outside-dns" in line :
             z = True
         if "redirect-gateway" in line :
             z = True
+        if "server 10.8" in line :
+            z2 = True
         
         if z :
             Times.append('#' + line)
         else :
-            Times.append(line)
+            if z2 :
+                Times.append("server 172.31.0.0 255.255.255.0\n")
+            else :
+                Times.append(line)
     
     
     with open('/etc/openvpn/server.conf', 'w') as file:
         file.writelines(Times)
     file.close()
     return
+
+def changeCert(Lines):
+   
+    Times = []
+    for line in Lines :
+        z = False
+
+        if "nobind" in line :
+            z = True
+       
+        if z :
+            Times.append('#' + line)
+        else :
+            Times.append(line)
+    return Lines
+    
+def addClient(name):
+   
+    localpath = home + '/.config/voider/self/'
+
+    os.chdir(localpath)
+
+    with open("creds") as file:
+        L = file.read().splitlines()
+        host = L[0][1:]
+        username = L[3][1:]
+        password = L[4][1:]
+        server = L[5][1:]
+    file.close()
+    
+    with open("clients") as file:
+        L = file.readlines()
+    file.close()
+    
+    L.append(name + '\n')
+    
+    with open("clients", "w") as file:
+        file.writelines(L)
+    file.close()
+    
+    localpath = home + '/.config/voider/self/clients'
+    remotepath = '/var/sftp/' + server + '/clients'
+    
+    Upload(username, password, localpath, remotepath, host)
+    
+def delClient(Lines):
+   
+    localpath = home + '/.config/voider/self/'
+
+    os.chdir(localpath)
+    
+    with open("clients") as file:
+        Lines = file.readlines()
+    file.close()
+    
+    Times = []
+    for line in Lines :
+        if not name in line :
+            Times.append(line)
+    
+    with open("clients", "w") as file:
+        file.writelines(Times)
+    file.close()
+    
+    with open("creds") as file:
+        L = file.read().splitlines()
+        host = L[0][1:]
+        username = L[3][1:]
+        password = L[4][1:]
+        server = L[5][1:]
+    file.close()
+    
+    localpath = home + '/.config/voider/self/clients'
+    remotepath = '/var/sftp/' + server + '/clients'
+    
+    Upload(username, password, localpath, remotepath, host)
 
 def Upload(username, password, localpath, remotepath, host):
     # Open a transport
@@ -215,24 +298,46 @@ def isAlive(vps_ip, username, password, peer, localpath):
             time.sleep(60)
     return True
 
-def send(sock, addr, self, peer, event):
+def send(sock, addr, self, peer, event, limit, sleep):
     message = self + ' ' + peer
     message = str.encode(message)
     count = 0
-    while count < 12 and not event.is_set():
+    while count < limit and not event.is_set():
         print('gogogo ' + str(count) + self + ' ' + peer)
         sock.sendto(message, addr)
-        time.sleep(random.randint(1, 10))
+        time.sleep(random.randint(1, sleep))
         count = count + 1
+        
+def receive_meeting_port(sock, event):
+    home = str(Path.home())
+    localdir = home + '/.config/voider/self/'
+    try:
+        data, addr = sock.recvfrom(1024)
+        event.set()
+    except socket.timeout:
+        print("exceeded timeout, for info from vps")
+        event.set()
+        time.sleep(5)
+        result = [False, None]
+        return result
+        
+    print('peer received from vps : {} {}'.format(addr, data))
+    addr = util.msg_to_addr(data)
+    
+    #sock.close()
+    result = [True, addr]
+        
+    return result
 
-def receive_server(sock, self, peer, event, local_port):
+
+def receive_server(sock, self, peer, event):
     home = str(Path.home())
     try:
         data, addr = sock.recvfrom(1024)
     except socket.timeout:
         print("exceeded timeout, for info from vps")
         event.set()
-        time.sleep(5)
+        time.sleep(10)
         result = [False, None]
         return result
     
@@ -284,7 +389,7 @@ def receive_client(sock, self, peer, event, num):
     except socket.timeout:
         print("exceeded timeout, for info from vps")
         event.set()
-        time.sleep(5)
+        time.sleep(10)
         result = [False, None]
         return result
         
@@ -328,8 +433,7 @@ def receive_client(sock, self, peer, event, num):
         result = [False, addr]
         
         return result    
-    
-    
+
 def ping(host, netns):
     try:
         subprocess.run(["ip", "netns", "exec", 'netns' + str(netns), "ping", "-c", "1", "-W", "3", host], check=True)
@@ -343,9 +447,7 @@ def ping2(host):
         return True
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
         return False
-        
-        
-        
+
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     return socket.inet_ntoa(fcntl.ioctl(

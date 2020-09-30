@@ -27,41 +27,47 @@ def udp_punch(access, self, localpath, idx):
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             sock.bind(('', 0))
-            sock.settimeout(120)
             local_port = sock.getsockname()[1]
-            print(str(local_port))
-            e = threading.Event()
-            done = False
-            
+            sock.settimeout(20)
+            e1 = threading.Event()
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                executor.submit(mymodule.send, sock, address, self, client, e)
-                future = executor.submit(mymodule.receive_server, sock, self, client, e, local_port)
-                result = future.result()
+                executor.submit(mymodule.send, sock, address, self, client, e1, 3, 5)
+                future = executor.submit(mymodule.receive_meeting_port, sock, e1)
+                result1 = future.result()
+                if result1[0] :
+                    sock.settimeout(120)
+                    address2 = result1[1]
+                    e2 = threading.Event()
+                   
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        executor.submit(mymodule.send, sock, address2, self, client, e2, 12, 10)
+                        future = executor.submit(mymodule.receive_server, sock, self, client, e2)
+                        result2 = future.result()
                 
+                        if result2[0] :
+                            print("info received")
+                            addr = result2[1]
+                            print(str(local_port))
+                            subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", mymodule.getint_out( home + '/.config/voider/self' ), "-p", "UDP", "--dport", str(local_port), "-j", "REDIRECT", "--to-port", "1194"])
+                            subprocess.run(["conntrack", "-D", "-p", "UDP"])
+                            print("nat REDIRECT rule set")
+                            time.sleep(25)
                 
-                if result[0] :
-                    print("info received")
-                    addr = result[1]
-                    subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", mymodule.getint_out( home + '/.config/voider/self' ), "-p", "UDP", "--dport", str(local_port), "-j", "REDIRECT", "--to-port", "1194"])
-                    subprocess.run(["conntrack", "-D", "-p", "UDP"])
-                    print("nat REDIRECT rule set")
-                    time.sleep(25)
-                
-                    count = 0
-                    connected = True
-                    while connected :
-                        if mymodule.ping2('172.31.0.' + str(idx)) :
-                            print("ping succeeded")
                             count = 0
-                            time.sleep(15)
-                        else :
-                            if count == 5 :
-                                connected = False
-                                subprocess.run(["iptables", "-t", "nat", "-D", "PREROUTING", "-i", mymodule.getint_out( home + '/.config/voider/self' ), "-p", "UDP", "--dport", str(local_port), "-j", "REDIRECT", "--to-port", "1194"])
-                            else :
-                                print('ping ' + str(count) + ' failed')
-                                time.sleep(5)
-                                count = count + 1
+                            connected = True
+                            while connected :
+                                if mymodule.ping2('172.31.0.' + str(idx)) :
+                                    print("ping succeeded")
+                                    count = 0
+                                    time.sleep(15)
+                                else :
+                                    if count == 5 :
+                                        connected = False
+                                        subprocess.run(["iptables", "-t", "nat", "-D", "PREROUTING", "-i", mymodule.getint_out( home + '/.config/voider/self' ), "-p", "UDP", "--dport", str(local_port), "-j", "REDIRECT", "--to-port", "1194"])
+                                    else :
+                                        print('ping ' + str(count) + ' failed')
+                                        time.sleep(5)
+                                        count = count + 1
 
 def connect_to_clients():
 
@@ -103,7 +109,6 @@ file.close()
 # place the needed nat rules 
 
 subprocess.run(["iptables", "-t", "nat", "--flush"])
-subprocess.run(["killall", "openvpn"])
 
 
 subprocess.run(["ip", "addr", "add", phone[1] + '/30', "dev", mymodule.getint_in( home + '/.config/voider/self' )])

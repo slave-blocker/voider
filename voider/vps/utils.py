@@ -20,9 +20,9 @@ def addSftpUser(user_rw, pass1, user_r, pass2):
         subprocess.run(["chown", "root:root", "/var/sftp"])
         subprocess.run(["chmod", "755", "/var/sftp"])
         os.mkdir("/etc/ssh/voider/", 0o755 )
-        file_obj  = open("/etc/ssh/voider/backup", "w+")
+        file  = open("/etc/ssh/voider/backup", "w+")
         copyfile("/etc/ssh/sshd_config", "/etc/ssh/voider/backup")
-        file_obj.close()
+        file.close()
     
     subprocess.run(["useradd", user_rw])
     setPassword(user_rw, pass1)
@@ -38,6 +38,20 @@ def addSftpUser(user_rw, pass1, user_r, pass2):
     subprocess.run(["touch", '/var/sftp/' + user_rw + '/clients'])
     subprocess.run(["chown", user_rw + ':' + user_rw, '/var/sftp/' + user_rw + '/clients'])
     subprocess.run(["chmod", "750", '/var/sftp/' + user_rw + '/clients'])
+
+    with open('/var/sftp/' + user_rw + '/DoA', 'w') as file:
+        file.write('0')
+    file.close()
+    
+    with open('/users') as file:
+        users = file.readlines()
+    file.close()
+    
+    users.append(user_rw + '\n')
+    
+    with open("/users", "w") as file:
+        file.writelines(users)
+    file.close()
 
     os.mkdir('/etc/ssh/voider/' + user_rw, 0o755 )
     
@@ -60,50 +74,63 @@ def addSftpUser(user_rw, pass1, user_r, pass2):
     "\nX11Forwarding no"
     ]
     
-    with open('/etc/ssh/voider/' + user_rw + '/conf', "w+") as file_obj :
-        file_obj.writelines(List2)
-    file_obj.close()
+    with open('/etc/ssh/voider/' + user_rw + '/conf', "w+") as file :
+        file.writelines(List2)
+    file.close()
     
     List2 = [
     user_rw ,
     '\n' + user_r
     ]
     
-    with open('/etc/ssh/voider/' + user_rw + '/names', "w+") as file_obj :
-        file_obj.writelines(List2)
-    file_obj.close()
+    with open('/etc/ssh/voider/' + user_rw + '/names', "w+") as file :
+        file.writelines(List2)
+    file.close()
     
-    with open("/etc/ssh/voider/backup") as file_obj :
-        back = file_obj.readlines()
-    file_obj.close()
+    with open("/etc/ssh/voider/backup") as file :
+        back = file.readlines()
+    file.close()
 
     os.chdir('/etc/ssh/voider/')
     List1 = []
     for name in os.listdir('.') : 
         if os.path.isdir(name) :
-            with open('/etc/ssh/voider/' + name + '/conf') as file_obj :
-                List = file_obj.readlines()
-            file_obj.close()
+            with open('/etc/ssh/voider/' + name + '/conf') as file :
+                List = file.readlines()
+            file.close()
             List1.extend(List)
 
-    with open("/etc/ssh/sshd_config", 'w') as file_obj :
-        file_obj.writelines(back)
-        file_obj.writelines(List1)
-    file_obj.close()
+    with open("/etc/ssh/sshd_config", 'w') as file :
+        file.writelines(back)
+        file.writelines(List1)
+    file.close()
     
     subprocess.run(["service", "ssh", "restart"])
 
 def delSftpUser(user_rw):
-        
+    
+    with open("/users") as file:
+        Lines = file.readlines()
+    file.close()
+    
+    Times = []
+    for line in Lines :
+        if not user_rw in line :
+            Times.append(line)
+    
+    with open("/users", "w") as file:
+        file.writelines(Times)
+    file.close()
+    
     os.remove('/var/sftp/' + user_rw + '/DoA')
     os.remove('/var/sftp/' + user_rw + '/clients')
     os.rmdir('/var/sftp/' + user_rw )
     
     subprocess.run(["deluser", user_rw])
     
-    with open('/etc/ssh/voider/' + user_rw + '/names') as file_obj :
-        user_r = file_obj.readlines()[1]
-    file_obj.close()
+    with open('/etc/ssh/voider/' + user_rw + '/names') as file :
+        user_r = file.readlines()[1]
+    file.close()
     
     subprocess.run(["deluser", user_r])
     
@@ -111,23 +138,23 @@ def delSftpUser(user_rw):
     os.remove('/etc/ssh/voider/' + user_rw + '/names')
     os.rmdir('/etc/ssh/voider/' + user_rw)
     
-    with open("/etc/ssh/voider/backup") as file_obj :
-        back = file_obj.readlines()
-    file_obj.close()
+    with open("/etc/ssh/voider/backup") as file :
+        back = file.readlines()
+    file.close()
 
     os.chdir('/etc/ssh/voider/')
     List1 = []
     for name in os.listdir('.') : 
         if os.path.isdir(name) :
-            with open('/etc/ssh/voider/' + name + '/conf') as file_obj :
-                List = file_obj.readlines()
-            file_obj.close()
+            with open('/etc/ssh/voider/' + name + '/conf') as file :
+                List = file.readlines()
+            file.close()
             List1.extend(List)
 
-    with open("/etc/ssh/sshd_config", 'w') as file_obj :
-        file_obj.writelines(back)
-        file_obj.writelines(List1)
-    file_obj.close()
+    with open("/etc/ssh/sshd_config", 'w') as file :
+        file.writelines(back)
+        file.writelines(List1)
+    file.close()
     
     subprocess.run(["service", "ssh", "restart"])
 
