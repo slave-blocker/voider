@@ -24,7 +24,7 @@ def join(sock, pair, port, servers, addr):
                     sock.sendto(addr_and_pair_to_msg(addr, pair), addr2)
                     break
                 count = count + 1
-            return
+        return
     if pair[1] in servers :
         with open('/var/sftp/' + pair[1] + '/clients') as file :
             clients = file.read().splitlines()
@@ -41,7 +41,7 @@ def join(sock, pair, port, servers, addr):
                     sock.sendto(addr_and_pair_to_msg(addr, pair), addr2)
                     break
                 count = count + 1
-            return
+        return
 
 logger = logging.getLogger()
 

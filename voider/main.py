@@ -12,6 +12,11 @@ from shutil import copyfile
 home = str(Path.home())
 
 print("welcome")
+if not os.path.exists("/etc/openvpn/home_voider") :
+    file  = open("/etc/openvpn/home_voider", "w+")
+    file.write(home)
+    file.close()
+
 if not os.path.exists(home + '/.config/voider/self/int_in') :
     print("Incoming interface not defined, the one connected to the phone .")
     subprocess.run(["ls", "/sys/class/net"])
@@ -170,7 +175,7 @@ if choice == '3' :
     mymodule.appendRoute( home, route)
     os.chdir(home + '/.config/voider/self/')
     mymodule.modify("occupants", (index + 1), True, name)
-    mymodule.addClient(name)
+    mymodule.addClient(name, home)
     os.chdir(home + '/ovpns/')
     with open(name + '.ovpn') as file:
         List2 = file.readlines()
@@ -193,15 +198,15 @@ if choice == '4' :
     index = input("Enter index integer : ")
     name = mymodule.getname( "occupants", int(index) )
     mymodule.modify( "occupants", int(index), False ) 
-    mymodule.delClient(name)
+    mymodule.delClient(name, home)
     mymodule.appendRoute( home)
     subprocess.run(["pivpn", "revoke", "-y", name])
     subprocess.run(["reboot"])
 
 if choice == '5' :
     print('Place access credentials inside :' + home + '/.config/voider/self/New/')
-    print("The name of the file of the access credentials must be the same as the name\n")
-    print("of the certificate given to the client. Without the '\"'.ovpn'\"' extension.")
+    print("The name of the file of the access credentials must be the same as the name")
+    print("of the certificate given to the client. Without the \".ovpn\" extension.")
 
     input("Press enter when done")
     os.chdir(home + '/.config/voider/self/New/')
@@ -226,7 +231,7 @@ if choice == '5' :
 if choice == '6' :
     print("The access credentials file needs to have the same name")
     print("as the name of the certificate handed out by the server. ")
-    print("Without the '\"'.ovpn'\"' extension. ")
+    print("Without the \".ovpn\" extension. ")
     
     print("The following certificates are available :")
     

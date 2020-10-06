@@ -13,7 +13,7 @@ def setPassword(userName:str, password:str):
 
 
 
-def addSftpUser(user_rw, pass1, user_r, pass2):
+def addSftpUser(user_rw, pass1, user_r, pass2, folder):
 
     if not os.path.exists("/var/sftp") :
         subprocess.run(["mkdir", "/var/sftp/"])
@@ -29,28 +29,28 @@ def addSftpUser(user_rw, pass1, user_r, pass2):
     subprocess.run(["useradd", user_r])
     setPassword(user_r, pass2)
     subprocess.run(["usermod", "-a", "-G", user_rw, user_r])
-    subprocess.run(["mkdir", '/var/sftp/' + user_rw])
-    subprocess.run(["chown", user_rw + ':' + user_rw, '/var/sftp/' + user_rw])
-    subprocess.run(["chmod", "750", '/var/sftp/' + user_rw])
-    subprocess.run(["touch", '/var/sftp/' + user_rw + '/DoA'])
-    subprocess.run(["chown", user_rw + ':' + user_rw, '/var/sftp/' + user_rw + '/DoA'])
-    subprocess.run(["chmod", "750", '/var/sftp/' + user_rw + '/DoA'])
-    subprocess.run(["touch", '/var/sftp/' + user_rw + '/clients'])
-    subprocess.run(["chown", user_rw + ':' + user_rw, '/var/sftp/' + user_rw + '/clients'])
-    subprocess.run(["chmod", "750", '/var/sftp/' + user_rw + '/clients'])
+    subprocess.run(["mkdir", '/var/sftp/' + folder])
+    subprocess.run(["chown", user_rw + ':' + user_rw, '/var/sftp/' + folder])
+    subprocess.run(["chmod", "750", '/var/sftp/' + folder])
+    subprocess.run(["touch", '/var/sftp/' + folder + '/DoA'])
+    subprocess.run(["chown", user_rw + ':' + user_rw, '/var/sftp/' + folder + '/DoA'])
+    subprocess.run(["chmod", "750", '/var/sftp/' + folder + '/DoA'])
+    subprocess.run(["touch", '/var/sftp/' + folder + '/clients'])
+    subprocess.run(["chown", user_rw + ':' + user_rw, '/var/sftp/' + folder + '/clients'])
+    subprocess.run(["chmod", "750", '/var/sftp/' + folder + '/clients'])
 
-    with open('/var/sftp/' + user_rw + '/DoA', 'w') as file:
+    with open('/var/sftp/' + folder + '/DoA', 'w') as file:
         file.write('0')
     file.close()
     
-    with open('/users') as file:
-        users = file.readlines()
+    with open('/root/servers') as file:
+        servers = file.readlines()
     file.close()
     
-    users.append(user_rw + '\n')
+    servers.append(folder + '\n')
     
-    with open("/users", "w") as file:
-        file.writelines(users)
+    with open("/root/servers", "w") as file:
+        file.writelines(servers)
     file.close()
 
     os.mkdir('/etc/ssh/voider/' + user_rw, 0o755 )
@@ -80,7 +80,8 @@ def addSftpUser(user_rw, pass1, user_r, pass2):
     
     List2 = [
     user_rw ,
-    '\n' + user_r
+    '\n' + user_r,
+    '\n' + folder
     ]
     
     with open('/etc/ssh/voider/' + user_rw + '/names', "w+") as file :
@@ -109,29 +110,31 @@ def addSftpUser(user_rw, pass1, user_r, pass2):
 
 def delSftpUser(user_rw):
     
-    with open("/users") as file:
+    with open('/etc/ssh/voider/' + user_rw + '/names') as file :
+        L = file.read().splitlines()
+    file.close()
+    
+    user_r = L[1]
+    folder = L[2]
+    
+    with open("/root/servers") as file:
         Lines = file.readlines()
     file.close()
     
     Times = []
     for line in Lines :
-        if not user_rw in line :
+        if not folder in line :
             Times.append(line)
     
-    with open("/users", "w") as file:
+    with open("/root/servers", "w") as file:
         file.writelines(Times)
     file.close()
     
-    os.remove('/var/sftp/' + user_rw + '/DoA')
-    os.remove('/var/sftp/' + user_rw + '/clients')
-    os.rmdir('/var/sftp/' + user_rw )
+    os.remove('/var/sftp/' + folder + '/DoA')
+    os.remove('/var/sftp/' + folder + '/clients')
+    os.rmdir('/var/sftp/' + folder )
     
     subprocess.run(["deluser", user_rw])
-    
-    with open('/etc/ssh/voider/' + user_rw + '/names') as file :
-        user_r = file.readlines()[1]
-    file.close()
-    
     subprocess.run(["deluser", user_r])
     
     os.remove('/etc/ssh/voider/' + user_rw + '/conf')

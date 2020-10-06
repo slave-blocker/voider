@@ -19,6 +19,8 @@ if choice == '1' :
 
     name2 = input("Enter username to read only : ")
     pass2 = input("Enter password to read only : ")
+    
+    folder = input("Enter name of folder of server : ")
 
     z=False
     for p in pwd.getpwall():
@@ -26,8 +28,18 @@ if choice == '1' :
             z=True
             print("User already exists")
 
+    with open("/root/servers") as file:
+        Lines = file.readlines()
+    file.close()
+    
+    for line in Lines :
+        if folder in line :
+            z=True
+            print("Folder already exists")
+            
+
     if not z :
-        utils.addSftpUser(name1, pass1, name2, pass2)
+        utils.addSftpUser(name1, pass1, name2, pass2, folder)
     
 
 if choice == '2' :

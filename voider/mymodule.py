@@ -10,13 +10,47 @@ from pathlib import Path
 import fcntl
 import struct
 import select
+import threading
 
-def patch(home, m1, m2):
+
+def patch_caller(home, m1, m2) :
+    call_started = threading.Event()
+    call_ongoing = threading.Event()
+    line_dead = threading.Event()
+    check = threading.Event()
+    check_done = threading.Event()
+    
+    threading.Thread(target=patch, args=(home, m1, m2, call_started, check, check_done, call_ongoing, line_dead, )).start()
+    #threading.Thread(target=check_dead, args=(call_started, check, check_done, )).start()
+"""
+def check_dead(call_started, check, check_done):
+    time.sleep(5)
+    if call_started.is_set() :
+        check.set()
+        check_done.wait()
+        check.clear()
+        check_done.clear()
+        
+def check_Alive(line_dead, call_ongoing, check, check_done):
+    check.clear()
+    finished = threading.Event()
+    threading.Thread(target=tcp_dump, args=(finished, )).start()
+    time.sleep(1)
+    if finished.is_set() :
+        call_ongoing.set()
+    else :
+        line_dead.set()
+    check_done.set()
+        
+def tcp_dump(finished):
+    subprocess.run(["timeout", "3", "tcpdump", "-i", getint_in( home + '/.config/voider/self/' ), "-c", "40"])
+    finished.set()
+"""
+def patch(home, m1, m2, call_started, check, check_done, call_ongoing, line_dead):
     pattern = re.compile(r'(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
-    active = False
     on = False
-    off = False
-    proc = subprocess.Popen(["tcpdump", "-i", getint_in( home + '/.config/voider/self' ), "-l"], stdout=subprocess.PIPE)
+    clear = False
+    proc = subprocess.Popen(["tcpdump", "-i", getint_in( home + '/.config/voider/self/' ), "-l"], stdout=subprocess.PIPE)
     for row in iter(proc.stdout.readline, b''):
         temp = row.rstrip()
         if "INVITE" in str(temp) and not on:
@@ -31,45 +65,62 @@ def patch(home, m1, m2):
                     if ip1[3] == '1':
                         idx = m1.index(ip1)
                         ip1 = m2[idx]
-                    subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", getint_in( home + '/.config/voider/self' ), "-j", "DNAT", "--to-destination", ip1])
+                    print("111 send all to :" + ip1)
+                    subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", getint_in( home + '/.config/voider/self/' ), "-j", "DNAT", "--to-destination", ip1])
                     on = True
+                    clear = False
+                    last_ip = ip1
+                    call_started.set()
                 if ip2[1] == '0' :
                     if ip2[3] == '1':
                         idx = m1.index(ip2)
                         ip2 = m2[idx]
-                    subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", getint_in( home + '/.config/voider/self' ), "-j", "DNAT", "--to-destination", ip2])
+                    print("222 send all to :" + ip2)
+                    subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", getint_in( home + '/.config/voider/self/' ), "-j", "DNAT", "--to-destination", ip2])
                     on = True
-        if "BYE" in str(temp) or "Terminated" in str(temp) or "Busy" in str(temp):
+                    clear = False
+                    last_ip = ip2
+                    call_started.set()
+        if "BYE" in str(temp) or "Terminated" in str(temp) or "Busy" in str(temp) or "Timeout" in str(temp):
             print(' B gotcha : ' + str(temp))   # process here
-            on = False 
-            # extracting the IP addresses 
-            ip1 = pattern.findall(str(temp))[0]
-            ip2 = pattern.findall(str(temp))[1]
-            print('gotcha 2: ' + ip1 + '   ' + ip2)
-            if ip1[1] == '0' or ip2[1] == '0' :
-                if ip1[1] == '0' :
-                    if ip1[3] == '1':
-                        idx = m1.index(ip1)
-                        ip1 = m2[idx]
-                    subprocess.run(["iptables", "-t", "nat", "-D", "PREROUTING", "-i", getint_in( home + '/.config/voider/self' ), "-j", "DNAT", "--to-destination", ip1])
-                    off = True
-                if ip2[1] == '0' :
-                    if ip2[3] == '1':
-                        idx = m1.index(ip2)
-                        ip2 = m2[idx]
-                    subprocess.run(["iptables", "-t", "nat", "-D", "PREROUTING", "-i", getint_in( home + '/.config/voider/self' ), "-j", "DNAT", "--to-destination", ip2])
-                    off = True
+            on = False
+            print("333 DON'T send all to :" + last_ip)
+            subprocess.run(["iptables", "-t", "nat", "-D", "PREROUTING", "-i", getint_in( home + '/.config/voider/self/' ), "-j", "DNAT", "--to-destination", last_ip])
+            clear = True
+            call_started.clear()
+"""
+don't break what is working .
+KISS
+OPTIONAL future implementation to check if for any reason the call is "on" although the line
+is dead.            
+        if call_started.is_set():
+            print("here 1")
+            if check.is_set() :
+                print("here 2")
+                threading.Thread(target=check_Alive, args=(line_dead, call_ongoing, check, check_done, )).start()
+        
+        if call_started.is_set():
+            print("here 3")
+            if call_ongoing.is_set():
+                print("here 4")
+                if line_dead.is_set():
+                    print("here 5")
+                    on = False 
+                    subprocess.run(["iptables", "-t", "nat", "-D", "PREROUTING", "-i", getint_in( home + '/.config/voider/self/' ), "-j", "DNAT", "--to-destination", last_ip])
+                    clear = True
+                    call_started.clear()
+                    call_ongoing.clear()
+                    line_dead.clear()
+"""                    
     
 def getint_in( localpath ):
-    os.chdir(localpath)
-    with open("int_in") as file:
+    with open(localpath + 'int_in') as file:
         int_eth = file.read()
     file.close()
     return int_eth
 
 def getint_out( localpath ):
-    os.chdir(localpath)
-    with open("int_out") as file:
+    with open(localpath + 'int_out') as file:
         int_wlan = file.read()
     file.close()
     return int_wlan
@@ -129,7 +180,7 @@ def appendRoute( home, route = None):
     j = 2
     for line in Lines :
         if line[0] == '1' :
-            List.append('\nroute 172.29.1.' + str(j) + ' 255.255.255.255')
+            List.append('\nroute 172.29.' + str(j) + '.1' + ' 255.255.255.255')
         j = j + 1
     
     with open('/etc/openvpn/backup') as file:
@@ -183,42 +234,38 @@ def changeCert(Lines):
             Times.append(line)
     return Lines
     
-def addClient(name):
+def addClient(name, home):
    
     localpath = home + '/.config/voider/self/'
 
-    os.chdir(localpath)
-
-    with open("creds") as file:
+    with open(localpath + 'creds') as file:
         L = file.read().splitlines()
         host = L[0][1:]
         username = L[3][1:]
         password = L[4][1:]
-        server = L[5][1:]
+        folder = L[5][1:]
     file.close()
     
-    with open("clients") as file:
+    with open(localpath + 'clients') as file:
         L = file.readlines()
     file.close()
     
     L.append(name + '\n')
     
-    with open("clients", "w") as file:
+    with open(localpath + 'clients', "w") as file:
         file.writelines(L)
     file.close()
     
     localpath = home + '/.config/voider/self/clients'
-    remotepath = '/var/sftp/' + server + '/clients'
+    remotepath = '/var/sftp/' + folder + '/clients'
     
     Upload(username, password, localpath, remotepath, host)
     
-def delClient(Lines):
+def delClient(name, home):
    
     localpath = home + '/.config/voider/self/'
-
-    os.chdir(localpath)
     
-    with open("clients") as file:
+    with open(localpath + 'clients') as file:
         Lines = file.readlines()
     file.close()
     
@@ -227,20 +274,20 @@ def delClient(Lines):
         if not name in line :
             Times.append(line)
     
-    with open("clients", "w") as file:
+    with open(localpath + 'clients', "w") as file:
         file.writelines(Times)
     file.close()
     
-    with open("creds") as file:
+    with open(localpath + 'creds') as file:
         L = file.read().splitlines()
         host = L[0][1:]
         username = L[3][1:]
         password = L[4][1:]
-        server = L[5][1:]
+        folder = L[5][1:]
     file.close()
     
     localpath = home + '/.config/voider/self/clients'
-    remotepath = '/var/sftp/' + server + '/clients'
+    remotepath = '/var/sftp/' + folder + '/clients'
     
     Upload(username, password, localpath, remotepath, host)
 
@@ -303,13 +350,12 @@ def send(sock, addr, self, peer, event, limit, sleep):
     message = str.encode(message)
     count = 0
     while count < limit and not event.is_set():
-        print('gogogo ' + str(count) + self + ' ' + peer)
+        print('gogogo ' + str(count) + self + ' ' + peer + ' ' + str(addr[1]))
         sock.sendto(message, addr)
         time.sleep(random.randint(1, sleep))
         count = count + 1
         
-def receive_meeting_port(sock, event):
-    home = str(Path.home())
+def receive_meeting_port(sock, event, home):
     localdir = home + '/.config/voider/self/'
     try:
         data, addr = sock.recvfrom(1024)
@@ -330,8 +376,8 @@ def receive_meeting_port(sock, event):
     return result
 
 
-def receive_server(sock, self, peer, event):
-    home = str(Path.home())
+def receive_server(sock, self, peer, event, home):
+    
     try:
         data, addr = sock.recvfrom(1024)
     except socket.timeout:
@@ -381,8 +427,8 @@ def receive_server(sock, self, peer, event):
         
         return result    
     
-def receive_client(sock, self, peer, event, num):
-    home = str(Path.home())
+def receive_client(sock, self, peer, event, num, home):
+    
     localdir = home + '/.config/voider/self/'
     try:
         data, addr = sock.recvfrom(1024)

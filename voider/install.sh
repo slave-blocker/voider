@@ -1,6 +1,5 @@
 #! /bin/bash
 
+sudo apt-get install tcpdump conntrack python3-paramiko bridge-utils
 curl -L https://install.pivpn.io | bash
-sudo apt-get install python3-paramiko
-sudo apt install bridge-utils
 
