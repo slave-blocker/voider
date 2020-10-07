@@ -8,7 +8,12 @@ s ist the number of the subnet, and p is the number of the phone.
 
 How to install :
 Download it and extract the zip. Take the resulting voider folder and put it in the 
-~/.config/ directory. Look at the install.sh to see which dependency's you need. 
+~/.config/ directory. 
+
+Delete all the "blub" files in the sub directories, git does not handle well the empty directories.
+So these files had to be included such that i was able to upload the needed directory tree.
+
+Look at the install.sh to see which dependency's you need. 
 a rc.local example is given. The /etc/rc.local then calls a so called caller.sh at boot time.
 This lets two scripts run in the background. These are the server_deamon.py ( not daemon )
 and the clients_deamon.py. Also a small script called rp_filter is executed to allow forwarding and turning off rp_filter and turning on accept_local.
@@ -67,7 +72,7 @@ please do contact me for critics, suggestions, questions, kudos, and even mobbin
 @ irc
 monero-pt
 
-special thanks to andreas hein
+special thanks to Andreas Hein
 
 a do nation is the best nation
 49k9fez67M6JLmkyveQvQFKjZNBsfi6VsS363pYBKqG8ekuUQXFbR8LZ7mv7R57H4hMnMCK7BdcwCFHxuGuHcZ1NN3gJdPD
