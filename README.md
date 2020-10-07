@@ -67,6 +67,7 @@ please do contact me for critics, suggestions, questions, kudos, and even mobbin
 @ irc
 monero-pt
 
+special thanks to andreas hein
 
 a do nation is the best nation
 49k9fez67M6JLmkyveQvQFKjZNBsfi6VsS363pYBKqG8ekuUQXFbR8LZ7mv7R57H4hMnMCK7BdcwCFHxuGuHcZ1NN3gJdPD
