@@ -40,11 +40,11 @@ After this a user can make direct ip calls to it's respective phone numbers.
 
 This means a user calls :
 
-10.1.2.1 ---> 1st client;
+10.1.2.1 ---> 1st client
 
-10.1.3.1 ---> 2nd client; 
+10.1.3.1 ---> 2nd client 
 
-10.1.4.1 ---> 3rd client;
+10.1.4.1 ---> 3rd client
 
 etc
 
