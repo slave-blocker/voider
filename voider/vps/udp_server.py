@@ -45,7 +45,7 @@ def join(sock, pair, port, servers, addr):
 
 logger = logging.getLogger()
 
-with open("/root/users") as file :
+with open("/root/servers") as file :
     servers = file.read().splitlines()
 file.close()
 

@@ -1,0 +1,18 @@
+edit the file /etc/security/limits.conf :
+appendTo :
+newuser          hard    nproc           5
+newuser          hard    fsize           1
+
+@ /var/sftp/newuser/
+do :
+chmod 200 newuser
+chmod 400 addresses
+
+apt-get install incron
+
+edit the file /etc/incron.allow
+put "root" in there.
+
+incrontab -e
+
+/var/sftp/newuser/newuser IN_MODIFY su root /root/pay_me.sh

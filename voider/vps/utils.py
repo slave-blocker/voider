@@ -30,8 +30,8 @@ def addSftpUser(user_rw, pass1, user_r, pass2, folder):
     setPassword(user_r, pass2)
     subprocess.run(["usermod", "-a", "-G", user_rw, user_r])
     subprocess.run(["mkdir", '/var/sftp/' + folder])
-    subprocess.run(["chown", user_rw + ':' + user_rw, '/var/sftp/' + folder])
-    subprocess.run(["chmod", "750", '/var/sftp/' + folder])
+    subprocess.run(["chown", 'root:root', '/var/sftp/' + folder])
+    subprocess.run(["chmod", "755", '/var/sftp/' + folder])
     subprocess.run(["touch", '/var/sftp/' + folder + '/DoA'])
     subprocess.run(["chown", user_rw + ':' + user_rw, '/var/sftp/' + folder + '/DoA'])
     subprocess.run(["chmod", "750", '/var/sftp/' + folder + '/DoA'])
@@ -59,7 +59,7 @@ def addSftpUser(user_rw, pass1, user_r, pass2, folder):
     '\n\nMatch User ' + user_rw ,
     "\nForceCommand internal-sftp",
     "\nPasswordAuthentication yes",
-    "\nChrootDirectory /var/sftp",
+    '\nChrootDirectory /var/sftp/' + folder,
     "\nPermitTunnel no",
     "\nAllowAgentForwarding no",
     "\nAllowTcpForwarding no",
@@ -67,7 +67,7 @@ def addSftpUser(user_rw, pass1, user_r, pass2, folder):
     '\nMatch User ' + user_r ,
     "\nForceCommand internal-sftp",
     "\nPasswordAuthentication yes",
-    "\nChrootDirectory /var/sftp",
+    '\nChrootDirectory /var/sftp/' + folder,
     "\nPermitTunnel no",
     "\nAllowAgentForwarding no",
     "\nAllowTcpForwarding no",
@@ -136,6 +136,8 @@ def delSftpUser(user_rw):
     
     subprocess.run(["deluser", user_rw])
     subprocess.run(["deluser", user_r])
+    subprocess.run(["delgroup", user_rw])
+    
     
     os.remove('/etc/ssh/voider/' + user_rw + '/conf')
     os.remove('/etc/ssh/voider/' + user_rw + '/names')
