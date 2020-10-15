@@ -113,9 +113,7 @@ pass : q2YtGlaKjd3wJ
    as such :
  
    bob<br/>
-
-   15Z35saZ35pxDK9haNdLsqteVugRcmLaWH
-
+   15Z35saZ35pxDK9haNdLsqteVugRcmLaWH<br/>
    yourpublickey
 
 6) put newuser
