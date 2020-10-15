@@ -111,7 +111,8 @@ pass : q2YtGlaKjd3wJ
 
 5) edit the newuser file, which contains your public key.
    as such :
-   bob
+ 
+   bob\n
 
    15Z35saZ35pxDK9haNdLsqteVugRcmLaWH
 
