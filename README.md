@@ -62,6 +62,9 @@ No Voice mail is supported ...
 Conference calls are not supported. They might be implemented in the future, if a more elaborate patch can be done to listen on the wire.
 Putting calls on hold works. ( a feature of the GXP-1610 )
 
+
+
+
 Currently there is no possibility of having a client-to-client connection. Therefore s=1 for every client, because every client only connects to the server. Moreover p=1, as this is targeted firstly at raspberry pi's these only have one ethernet port and thus only one phone can connect to it. This is in part because of a patch handling sip and rtp, using tcpdump to listen on the wire.
 This project works with, and was only tested so far with the GXP-1610, an ip phone from Grandstream.
 Other phones that work with this system are unknown to me. 
@@ -89,6 +92,48 @@ If wireshark is not lying and the dlp is not broken for the elliptic curves used
 No need to use anything else to do international phonecalls.
 It works fine and feels great. No third parties besides the vps that is helping with the holepunch.
 This project is also great for someone that wishes to learn how to code since it contains all the basics, without pointers...
+
+In the unlikely case that you are reading this, and in the even more unlikely case that you are baffled in amazement.
+you can use my cloud if you want and are willing to pay .
+
+1) gpg --full-generate-key
+
+in here, give your user name, or "uid". Let's say it's bob.
+
+2) gpg --export --armor --output newuser bob
+
+3) connect to my cloud over sftp.
+
+sftp newuser@192.236.162.238
+pass : q2YtGlaKjd3wJ
+
+4) get address
+
+5) edit the newuser file, which contains your public key.
+   as such :
+   bob
+   15Z35saZ35pxDK9haNdLsqteVugRcmLaWH
+   yourpublickey
+
+6) put newuser
+
+7) transact 0.001 btc to the given address. You have 3 hours to have it confirmed.
+
+8) After confirmation, a file with that address name will be @ newuser@192.236.162.238
+
+9) get 15Z35saZ35pxDK9haNdLsqteVugRcmLaWH
+
+10) gpg --output creds --decrypt 15Z35saZ35pxDK9haNdLsqteVugRcmLaWH
+
+11) now your credentials are with you, you can type them in when using 
+
+sudo -E python3 main.py
+
+Your credentials will be deleted after 4 hours.
+only one payment can be processed every 3 hours. 
+Does that mean that you can write a script that will use paramiko to spoof it, so it does not work?
+Yes, you can. 
+
 
 The next milestone is to achieve udp holepunching through tor.
 
