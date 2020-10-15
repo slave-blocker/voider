@@ -123,8 +123,9 @@ pass : q2YtGlaKjd3wJ
 
 5)Ö)
    This means, the text file "newuser" . Shall be edited as follows :
-   bob<br/> (Line 1 of text file)
-   bc1qgpschlf2hrv2pgthdq52ksurnwaqzn7kk9pupv<br/> (Line 2 of text file)
+   
+   bob (Line 1 of text file) <br/>
+   bc1qgpschlf2hrv2pgthdq52ksurnwaqzn7kk9pupv (Line 2 of text file) <br/>
    yourpublickey (starting from line 3 until the end of text file)
 
 6) put newuser
