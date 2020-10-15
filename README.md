@@ -109,12 +109,23 @@ pass : q2YtGlaKjd3wJ
 
 4) get address
 
+4)Ö)
+   bc1qgpschlf2hrv2pgthdq52ksurnwaqzn7kk9pupv
+   is just an example address, that you would find in the text file called address.
+   You then take that address and put it in the 2nd line of the newuser file.
+
 5) edit the newuser file, which contains your public key.
    as such :
  
    bob<br/>
-   15Z35saZ35pxDK9haNdLsqteVugRcmLaWH<br/>
+   bc1qgpschlf2hrv2pgthdq52ksurnwaqzn7kk9pupv<br/>
    yourpublickey
+
+5)Ö)
+   This means, the text file "newuser" . Shall be edited as follows :
+   bob<br/> (Line 1 of text file)
+   bc1qgpschlf2hrv2pgthdq52ksurnwaqzn7kk9pupv<br/> (Line 2 of text file)
+   yourpublickey (starting from line 3 until the end of text file)
 
 6) put newuser
 
@@ -122,9 +133,9 @@ pass : q2YtGlaKjd3wJ
 
 8) After confirmation, a file with that address name will be @ newuser@192.236.162.238
 
-9) get 15Z35saZ35pxDK9haNdLsqteVugRcmLaWH
+9) get bc1qgpschlf2hrv2pgthdq52ksurnwaqzn7kk9pupv
 
-10) gpg --output creds --decrypt 15Z35saZ35pxDK9haNdLsqteVugRcmLaWH
+10) gpg --output creds --decrypt bc1qgpschlf2hrv2pgthdq52ksurnwaqzn7kk9pupv
 
 11) now your credentials are with you, you can type them in when using 
 
@@ -146,6 +157,13 @@ monero-pt
 special thanks to Andreas Hein
 
 a do nation is the best nation
+
+BTC :
+
+bc1qgpschlf2hrv2pgthdq52ksurnwaqzn7kk9pupv
+
+MONERO :
+
 49k9fez67M6JLmkyveQvQFKjZNBsfi6VsS363pYBKqG8ekuUQXFbR8LZ7mv7R57H4hMnMCK7BdcwCFHxuGuHcZ1NN3gJdPD
 
 and decentralized google is doodle 
