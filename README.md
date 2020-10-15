@@ -130,7 +130,7 @@ pass : q2YtGlaKjd3wJ
 
 6) put newuser
 
-7) transact 0.001 btc to the given address. You have 3 hours to have it confirmed.
+7) transact 0.0012 btc to the given address. You have 3 hours to have it confirmed.
 
 8) After confirmation, a file with that address name will be @ newuser@192.236.162.238
 
