@@ -122,13 +122,13 @@ if payed :
 
     print("pass2 : " + pas2)
 
-    access = ["the ip of the vps : 192.236.162.238 \n",
+    access = ["the ip of the vps : (the ip of your vps) \n",
               "the read only user for the vps : " + user_r + '\n',
               "the read only password for the vps : " + pas2 + '\n',
               "the read write user for the vps : " + user_rw + '\n',
               "the read write password for the vps : " + pas1 + '\n',
               "the folder\'s name in the vps : " + folder + '\n',
-              "the port number that the vps is listening on : 6868"
+              "the port number that the vps is listening on : (the port of your vps)"
              ]
 
     with open("/root/crypto_pay/btc/creds", "w+") as creds:
