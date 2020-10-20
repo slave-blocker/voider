@@ -141,6 +141,8 @@ if payed :
 
     os.rename("/root/crypto_pay/btc/creds.gpg", '/var/sftp/newuser/' + addr)
 
+    subprocess.run(["chmod", "400", '/var/sftp/newuser/' + addr])
+    
     subprocess.run(["/root/crypto_pay/btc/call_rm_creds.sh", '/var/sftp/newuser/' + addr])
 
     with open("/root/crypto_pay/btc/addresses") as addresses:

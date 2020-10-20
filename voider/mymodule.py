@@ -232,7 +232,7 @@ def changeCert(Lines):
             Times.append('#' + line)
         else :
             Times.append(line)
-    return Lines
+    return Times
     
 def addClient(name, home):
    
