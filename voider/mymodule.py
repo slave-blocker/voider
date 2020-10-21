@@ -295,16 +295,16 @@ def Upload(username, password, localpath, remotepath, host):
     # Open a transport
     try :
         transport = paramiko.Transport((host, 22))
-        print("u 1")
+        #print("u 1")
         # Auth    
         transport.connect(None, username, password)
-        print("u 2")
+        #print("u 2")
         # Go!    
         sftp = paramiko.SFTPClient.from_transport(transport)
-        print(localpath + "u 3" + remotepath)
+        #print(localpath + "u 3" + remotepath)
         # Upload
         sftp.put(localpath, remotepath)
-        print("u 4")
+        #print("u 4")
         # Close
         if sftp: sftp.close()
         if transport: transport.close()
@@ -316,19 +316,16 @@ def Download(username, password, localpath, remotepath, host):
     # Open a transport
     try :
         transport = paramiko.Transport((host, 22))
-        print("d 1")
+        #print("d 1")
         # Auth    
         transport.connect(None, username, password)
-        print("d 2")
+        #print("d 2")
         # Go!    
         sftp = paramiko.SFTPClient.from_transport(transport)
-        print("d 3")
+        #print("d 3")
         # Download
-        print(host + " d 3 ")
-        print(username + " d 3 " + password)
-        print(localpath + " d 3 " + remotepath)
-        sftp.get(localpath, remotepath)
-        print("d 4")
+        sftp.get(remotepath, localpath)
+        #print("d 4")
         # Close
         if sftp: sftp.close()
         if transport: transport.close()
