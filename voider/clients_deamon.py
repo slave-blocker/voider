@@ -72,7 +72,7 @@ def worker(num, phone, home):
             subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", 'veth' + str(num), "-s", "172.29.1.1", "-j", "SNAT", "--to-source", '10.' + str(num) + '.1.1'])
             
             while True :
-                if  mymodule.isAlive(vps_ip, username, password, folder, localpath):
+                if  mymodule.isAlive(vps_ip, username, password, localpath):
                     print("isAlive!")
                     result = udp_punch(vps_ip, vps_port, folder, num, home, self)
                     print(str(result[0]))

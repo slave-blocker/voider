@@ -257,7 +257,7 @@ def addClient(name, home):
     file.close()
     
     localpath = home + '/.config/voider/self/clients'
-    remotepath = '/var/sftp/' + folder + '/clients'
+    remotepath = '/clients'
     
     Upload(username, password, localpath, remotepath, host)
     
@@ -287,53 +287,60 @@ def delClient(name, home):
     file.close()
     
     localpath = home + '/.config/voider/self/clients'
-    remotepath = '/var/sftp/' + folder + '/clients'
+    remotepath = '/clients'
     
     Upload(username, password, localpath, remotepath, host)
 
 def Upload(username, password, localpath, remotepath, host):
     # Open a transport
-    transport = paramiko.Transport((host, 22))
-
-    # Auth    
-    transport.connect(None, username, password)
-
-    # Go!    
-    sftp = paramiko.SFTPClient.from_transport(transport)
-        
-    # Upload
-    sftp.put(localpath, remotepath)
-
-    # Close
-    if sftp: sftp.close()
-    if transport: transport.close()
-    
+    try :
+        transport = paramiko.Transport((host, 22))
+        print("u 1")
+        # Auth    
+        transport.connect(None, username, password)
+        print("u 2")
+        # Go!    
+        sftp = paramiko.SFTPClient.from_transport(transport)
+        print(localpath + "u 3" + remotepath)
+        # Upload
+        sftp.put(localpath, remotepath)
+        print("u 4")
+        # Close
+        if sftp: sftp.close()
+        if transport: transport.close()
+    except Exception:
+        print("Upload 1")
     return
     
 def Download(username, password, localpath, remotepath, host):
     # Open a transport
-    transport = paramiko.Transport((host, 22))
-
-    # Auth    
-    transport.connect(None, username, password)
-
-    # Go!    
-    sftp = paramiko.SFTPClient.from_transport(transport)
-        
-    # Download
-    sftp.get(remotepath, localpath)
-
-    # Close
-    if sftp: sftp.close()
-    if transport: transport.close()
-    
+    try :
+        transport = paramiko.Transport((host, 22))
+        print("d 1")
+        # Auth    
+        transport.connect(None, username, password)
+        print("d 2")
+        # Go!    
+        sftp = paramiko.SFTPClient.from_transport(transport)
+        print("d 3")
+        # Download
+        print(host + " d 3 ")
+        print(username + " d 3 " + password)
+        print(localpath + " d 3 " + remotepath)
+        sftp.get(localpath, remotepath)
+        print("d 4")
+        # Close
+        if sftp: sftp.close()
+        if transport: transport.close()
+    except Exception:
+        print("Download 1")
     return
 # paramiko.util.log_to_file("paramiko.log")
 
-def isAlive(vps_ip, username, password, peer, localpath):
+def isAlive(vps_ip, username, password, localpath):
     isDead = True
     localpath = localpath + '/DoA/DoA'
-    remotepath = '/' + peer + '/DoA'
+    remotepath = '/DoA'
     while isDead:
         Download(username, password, localpath, remotepath, vps_ip)
         with open(localpath) as file:

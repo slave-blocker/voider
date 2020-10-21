@@ -22,7 +22,7 @@ def udp_punch(access, self, client, localpath, idx, home):
     address = (vps_ip, int(vps_port))
     
     while True :
-        if mymodule.isAlive(vps_ip, username, password, folder, localpath):
+        if mymodule.isAlive(vps_ip, username, password, localpath):
             print("isAlive")
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -154,7 +154,7 @@ with open("creds") as file:
 file.close()
 
 localpath = home + '/.config/voider/self/DoA'
-remotepath = '/' + server + '/DoA'
+remotepath = '/DoA'
 while(True):
     print("uploading")
     mymodule.Upload(username, password, localpath, remotepath, host)
