@@ -139,9 +139,11 @@ if payed :
 
     subprocess.run(["gpg", "--recipient", newuser, "--encrypt", "--trust-model", "always", "/root/crypto_pay/btc/creds" ])
 
-    os.rename("/root/crypto_pay/btc/creds.gpg", '/var/sftp/newuser/' + addr)
+    subprocess.run(["chown", "newuser:newuser", "/root/crypto_pay/btc/creds.gpg"])
 
-    subprocess.run(["chmod", "400", '/var/sftp/newuser/' + addr])
+    subprocess.run(["chmod", "400", "/root/crypto_pay/btc/creds.gpg"])
+
+    os.rename("/root/crypto_pay/btc/creds.gpg", '/var/sftp/newuser/' + addr)
     
     subprocess.run(["/root/crypto_pay/btc/call_rm_creds.sh", '/var/sftp/newuser/' + addr])
 

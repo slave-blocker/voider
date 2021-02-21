@@ -464,12 +464,12 @@ def receive_client(sock, self, peer, event, num, home):
         print("punch done, now rest...")
         time.sleep(5)
         
-        subprocess.run(["conntrack", "-D", "-p", "UDP"])
-        subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "conntrack", "-D", "-p", "UDP"])
         subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", getint_out( localdir ), "-s", addr[0], "-j", "DNAT", "--to", '172.30.' + str(num) + '.2'])
         subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "iptables", "-t", "nat", "-A", "POSTROUTING", "-o", 'veth' + str(num), "-d", addr[0], "-j", "SNAT", "--to-source", get_ip_address(getint_out( localdir ))])
-        subprocess.run(["conntrack", "-D", "-p", "UDP"])
-        subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "conntrack", "-D", "-p", "UDP"])
+        subprocess.run(["conntrack", "-D", "-p", "UDP", "-s", addr[0]])
+        subprocess.run(["conntrack", "-D", "-p", "UDP", "-d", addr[0]])
+        subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "conntrack", "-D", "-p", "UDP", "-s", addr[0]])
+        subprocess.run(["ip", "netns", "exec", 'netns' + str(num), "conntrack", "-D", "-p", "UDP", "-d", addr[0]])
 
         print("expecting incoming packets to activate own nat rule.")
         time.sleep(10)

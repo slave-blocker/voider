@@ -49,7 +49,8 @@ def udp_punch(access, self, client, localpath, idx, home):
                             addr = result2[1]
                             print(str(local_port))
                             subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", mymodule.getint_out( home + '/.config/voider/self/' ), "-p", "UDP", "--dport", str(local_port), "-j", "REDIRECT", "--to-port", "1194"])
-                            subprocess.run(["conntrack", "-D", "-p", "UDP"])
+                            subprocess.run(["conntrack", "-D", "-p", "UDP", "-s", addr[0]])
+                            subprocess.run(["conntrack", "-D", "-p", "UDP", "-d", addr[0]])
                             print("nat REDIRECT rule set")
                             time.sleep(25)
                 
