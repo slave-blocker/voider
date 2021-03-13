@@ -49,8 +49,7 @@ def udp_punch(access, self, client, localpath, idx, home):
                             addr = result2[1]
                             print(str(local_port))
                             subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", mymodule.getint_out( home + '/.config/voider/self/' ), "-p", "UDP", "--dport", str(local_port), "-j", "REDIRECT", "--to-port", "1194"])
-                            subprocess.run(["conntrack", "-D", "-p", "UDP", "-s", addr[0]])
-                            subprocess.run(["conntrack", "-D", "-p", "UDP", "-d", addr[0]])
+                            subprocess.run(["conntrack", "-D", "-p", "UDP"])
                             print("nat REDIRECT rule set")
                             time.sleep(25)
                 
@@ -98,12 +97,6 @@ with open("/etc/openvpn/home_voider") as file:
     home = file.read().splitlines()[0]
 file.close()
 
-os.chdir("/etc/openvpn/ccd")
-
-n = len([name for name in os.listdir('.') if os.path.isfile(name)])
-
-print(n)
-
 with open(home + '/.config/voider/self/phone_number') as file:
     phone = file.read().splitlines()
 file.close()
@@ -123,26 +116,32 @@ subprocess.run(["iptables", "-t", "nat", "-A", "POSTROUTING", "-o", "tun0", "-s"
 # out of the tunnel :
 subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", "tun0", "-d", "172.29.1.1", "-p", "all", "-j", "DNAT", "--to-destination", phone[0]])
 
+localpath = home + '/.config/voider/self/'
+
+with open(localpath + 'occupants') as file:
+    clients = file.read().splitlines()
+file.close()
+
 m1 = []
 m2 = []
-for x in range(1, n+1):
 
-    callee1 = '10.1.'+ str(x + 1) +'.1'
-    callee2 = '172.29.'+ str(x + 1) + '.1'
-# into the tunnel :
-    subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", mymodule.getint_in( home + '/.config/voider/self/' ), "-d", callee1, "-p", "all", "-j", "DNAT", "--to-destination", callee2])
-# out of the tunnel :
-    subprocess.run(["iptables", "-t", "nat", "-A", "POSTROUTING", "-o", mymodule.getint_in( home + '/.config/voider/self/' ), "-s", callee2, "-p", "all", "-j", "SNAT", "--to-source", callee1])
-    m1.append(callee1)
-    m2.append(callee2)
+x=1
 
+for client in clients :
+    if client[0] == '1':
+        callee1 = '10.1.'+ str(x + 1) +'.1'
+        callee2 = '172.29.'+ str(x + 1) + '.1'
+    # into the tunnel :
+        subprocess.run(["iptables", "-t", "nat", "-A", "PREROUTING", "-i", mymodule.getint_in( home + '/.config/voider/self/' ), "-d", callee1, "-p", "all", "-j", "DNAT", "--to-destination", callee2])
+    # out of the tunnel :
+        subprocess.run(["iptables", "-t", "nat", "-A", "POSTROUTING", "-o", mymodule.getint_in( home + '/.config/voider/self/' ), "-s", callee2, "-p", "all", "-j", "SNAT", "--to-source", callee1])
+        m1.append(callee1)
+        m2.append(callee2)
+    x += 1
 
 threading.Thread(target=mymodule.patch_caller, args=(home, m1, m2, )).start()
 
 threading.Thread(target=connect_to_clients, args=(home, )).start()
-
-
-localpath = home + '/.config/voider/self/'
 
 os.chdir(localpath)
 
