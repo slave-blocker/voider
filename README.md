@@ -17,7 +17,7 @@ Look at the install.sh to see which dependency's you need.
 a rc.local example is given. The /etc/rc.local then calls a so called caller.sh at boot time.
 This lets two scripts run in the background. These are the server_deamon.py ( not daemon )
 and the clients_deamon.py. Also a small script called rp_filter is executed to allow forwarding and turning off rp_filter and turning on accept_local.
-
+       
 Usage :
 The main.py should be executed always with :
 
