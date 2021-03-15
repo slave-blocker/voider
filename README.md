@@ -22,7 +22,7 @@ Usage :
 The main.py should be executed always with :
 
 sudo -E python3 main.py 
-
+        
 Creating new clients to our own openvpn server should be straight forward aswell as creating new clients connections to other servers. The output of main.py should be self explanatory.
 
 Some confusion could arise from creating access credentials .
