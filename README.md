@@ -5,7 +5,7 @@ Make phonecalls to 10.i.s.p
    
 i is the index of the network namespace .
 s ist the number of the subnet, and p is the number of the phone.
-
+   
 How to install :
 Download it and extract the zip. Take the resulting voider folder and put it in the 
 ~/.config/ directory. 
