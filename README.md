@@ -67,7 +67,6 @@ Putting calls on hold works. ( a feature of the GXP-1610 )
 
 Currently there is no possibility of having a client-to-client connection. Therefore s=1 for every client, because every client only connects to the server. Moreover p=1, as this is targeted firstly at raspberry pi's these only have one ethernet port and thus only one phone can connect to it. This is in part because of a patch handling sip and rtp, using tcpdump to listen on the wire.
 This project works with the GXP-1610, YEA SIP-T19P and it is assumed that it works with every ip phone that is able to do direct ip calls without proxy. The exchange of audio codecs seems to work fine, and is interoperable on these "new" ip phones.
-Other phones that work with this system are unknown to me. 
 Every phone needs to have a different ip address. Because after sip, when the rtp stream starts it uses the addresses from the caller and the callee wich are on the phones. Besides that the ip addresses of the phones are totally irrelevant. If the phones would have the same ip address then sip works but the phone would be calling itself so it does not send the rtp packets out it's gateway.
 
 The range goes from :
