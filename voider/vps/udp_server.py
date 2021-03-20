@@ -45,10 +45,6 @@ def join(sock, pair, port, servers, addr):
 
 logger = logging.getLogger()
 
-with open("/root/servers") as file :
-    servers = file.read().splitlines()
-file.close()
-
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) # UDP
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 sock.bind(('', ))
@@ -56,6 +52,10 @@ sock.bind(('', ))
 List1 = []
 List2 = []
 while True:
+    
+    with open("/root/servers") as file :
+        servers = file.read().splitlines()
+    file.close()
     
     data, addr = sock.recvfrom(1024) # buffer size is 1024 bytes
     print('connection from: ' + str(addr[0]) + ' @port : ' + str(addr[1]) )
