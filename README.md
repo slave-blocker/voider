@@ -9,10 +9,7 @@ s ist the number of the subnet, and p is the number of the phone.
 How to install :
 Download it and extract the zip. Take the resulting voider folder and put it in the 
 ~/.config/ directory. 
-   
-Delete all the "blub" files in the sub directories, git does not handle well the empty directories.
-So these files had to be included such that i was able to upload the needed directory tree.
-       
+      
 Look at the install.sh to see which dependency's you need. 
 a rc.local example is given. The /etc/rc.local then calls a so called caller.sh at boot time.
 This lets two scripts run in the background. These are the server_deamon.py ( not daemon )
