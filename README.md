@@ -92,6 +92,8 @@ BTC :
 
 bc1qgpschlf2hrv2pgthdq52ksurnwaqzn7kk9pupv
 
+![What is this](btc.gif)
+
 MONERO :
 
 48kABkceuv98L51VCDZTqLfhUyAEd15aZZkAifxvU61kWHdqMKghmfD6ND3tKx1euBaCYUwsPLxE4MVHkHb3qDgb7ESycc1
