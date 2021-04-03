@@ -1,5 +1,6 @@
+The range of the phone numbers goes from : 172.16.0.0 to 172.28.255.252
 
-As s ranges from 1 to 255 for a server and i ranges from 1 to 255 aswell every user has up to 500 connections. Now because of the birthday's paradox :
+Every phone number needs to be distinct. Now because of the birthday's paradox :
 
 The range implies 13 * ( 2 ^ 16 ) addresses .
 13 because 13 = (28 - 16) + 1 .
