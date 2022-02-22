@@ -61,7 +61,7 @@ Please do contact me for critics, suggestions, questions, kudos, and even mobbin
 
 special thanks to Andreas Hein !
 
-a do nation is the best nation !
+A do nation is the best nation !
 
 **BTC** :
 
