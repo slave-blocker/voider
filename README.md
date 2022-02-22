@@ -51,7 +51,7 @@ etc
 
 etc
 
-General comments and instructions are given in "notes" .
+General comments and instructions are given in "**notes**".
 
 
 
