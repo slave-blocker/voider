@@ -55,14 +55,13 @@ General comments and instructions are given in "notes" .
 
 
 
-please do contact me for critics, suggestions, questions, kudos, and even mobbing attempts are welcome.
+Please do contact me for critics, suggestions, questions, kudos, and even mobbing attempts are welcome.
 
-@ irc
-monero-pt
+@ irc   **monero-pt**
 
-special thanks to Andreas Hein
+special thanks to Andreas Hein !
 
-a do nation is the best nation
+a do nation is the best nation !
 
 **BTC** :
 
