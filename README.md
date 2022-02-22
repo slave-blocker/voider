@@ -1,10 +1,10 @@
 # voider
 
 Be your own phonecentral.
-Make phonecalls to 10.i.s.p
+Make phonecalls to 10.i.s.p !
    
-i is the index of the network namespace,
-s ist the number of the subnet, and p is the number of the phone.
+The index of the network namespace is i,
+s is the number of the subnet, and p is the number of the phone.
    
 How to install :
  
