@@ -17,7 +17,7 @@ in /home/(you)/.config/
 
 ./install.sh (sudo password will be needed)      
 
-How to use :
+**How to use** :
 
 Buy a GXP1610 IP phone.
 
