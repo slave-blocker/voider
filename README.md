@@ -64,10 +64,10 @@ special thanks to Andreas Hein
 
 a do nation is the best nation
 
-BTC :
+**BTC** :
 
 ![btc](btc.gif)
 
-MONERO :
+**MONERO** :
 
 ![xmr](xmr.gif)
