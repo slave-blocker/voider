@@ -11,6 +11,6 @@
 #
 # By default this script does nothing
 
-/home/me/.config/voider/caller.sh &
+/home/§/.config/voider/caller.sh &
 
 exit 0
