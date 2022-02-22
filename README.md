@@ -6,7 +6,7 @@ Make phonecalls to 10.i.s.p !
 The index of the network namespace is i,
 s is the number of the subnet, and p is the number of the phone.
    
-How to install :
+**How to install** :
  
 git clone https://github.com/slave-blocker/voider.git
 
