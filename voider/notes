@@ -139,7 +139,8 @@ This is in part because of a patch handling sip and rtp, using tcpdump to listen
 This project works with the GXP-1610, 
 and it is assumed that it works with every ip phone that is able to do direct ip calls without proxy.
 The exchange of audio codecs seems to work fine, and is interoperable on these "new" ip phones.
-The YEA SIP-T19P makes outbound calls but does not receive them. This might be tweakable on the settings of the phone via web interface. (there are a lot)
+The YEA SIP-T19P makes outbound calls but does not receive them. 
+This might be tweakable on the settings of the phone via web interface. (there are a lot)
 
 and decentralized google is doodle 
 
