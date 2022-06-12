@@ -63,10 +63,6 @@ special thanks to Andreas Hein !
 
 A do nation is the best nation !
 
-**BTC** :
-
-![btc](btc.gif)
-
 **MONERO** :
 
 ![xmr](xmr.gif)
