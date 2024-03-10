@@ -27,13 +27,16 @@ git clone https://github.com/slave-blocker/voider.git
 
 cd voider/voider
 
-Run the install with the user that is going to have the scripts.
-
-./install_as_user.sh (sudo password will be needed)
-
-additionally run as root :
+run as root :
 
 ./install_as_root.sh
+
+(there is still a bug on running python3 mgmt.py as root.
+run "python3 mgmt.py" 1 and "python3 mgmt.py" 2 until it returns no exceptions)
+
+run the install with the user that is going to have the scripts.
+
+./install_as_user.sh (sudo password will be needed)
 
 
 **How to use** :
