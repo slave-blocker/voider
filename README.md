@@ -27,14 +27,13 @@ git clone https://github.com/slave-blocker/voider.git
 
 cd voider/voider
 
-Run the install with the user that is going to have the scripts,
-in /home/(you)/.config/
+Run the install with the user that is going to have the scripts.
 
-./install.sh (sudo password will be needed)
+./install_as_user.sh (sudo password will be needed)
 
-additionally install :
+additionally run as root :
 
-pip3 install scapy (as root)
+./install_as_root.sh
 
 
 **How to use** :
