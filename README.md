@@ -2,14 +2,12 @@
 
 ![tiefer](tiefer.png)
 
-(code is buggy, needs to be redone)
-
 Direct Ip Calls, wich are ip agnostic.
-the private phone number on the phone itself is always : **172.16.19.84/29**
-the gateway is always : **172.16.19.85/29**.
+the private phone number on the phone itself is always : **172.16.19.85/30**
+the gateway is always : **172.16.19.86/30**.
 
 Being able to forward ports on your router makes you a senator.
-If you are not a senator then you are a citizen.
+
 No need for static ip addresses, .onion addresses are used as the 
 anchors.
 
@@ -23,13 +21,9 @@ Conference calls are now possible with the GXP1610!
 
  
 
-Symmetric encryption of the udp packets, for the udp holepunch should still be done.
-
-
-
 **How to install** :
  
-git clone https://github.com/slave-blocker/voider_2.git
+git clone https://github.com/slave-blocker/voider.git
 
 cd voider/voider
 
@@ -77,7 +71,7 @@ etc
 etc
 
 **There is no pbx being used, instead sip packets die before getting to the callee.
-And then some deep packet inspection happens. Replacing the 172.16.19.84 by the tunnel address, or by a fake address.
+And then some deep packet inspection happens. Replacing the 172.16.19.85 by the tunnel address, or by a fake address.
 The packet is then replayed, by scapy and tcprewrite, towards the callee phone.**
 
 
