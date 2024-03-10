@@ -11,6 +11,6 @@
 #
 # By default this script does nothing
 
-/home/§/.config/voider/caller.sh &
+/home/§/.config/voider/caller.sh > /home/§/.config/voider/pid_log &
 
 exit 0

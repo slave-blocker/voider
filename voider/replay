@@ -1,0 +1,69 @@
+#! /bin/bash
+
+ip netns add replay
+brctl addbr breplay
+ip addr add 172.18.0.1/30 dev breplay
+ip link set dev breplay up
+ip link add vethreplay type veth peer name veth-breplay
+ip link set vethreplay netns replay
+brctl addif breplay veth-breplay
+ip link set dev veth-breplay up
+
+ip netns exec replay iptables -w -t nat --flush
+ip netns exec replay iptables -t filter --flush
+ip netns exec replay ip addr add 172.18.0.2/30 dev vethreplay
+ip netns exec replay ip link set dev lo up
+ip netns exec replay ip link set dev vethreplay up
+
+###################
+
+brctl addbr brsip
+ip addr add 172.19.0.1/30 dev brsip
+ip link set dev brsip up
+ip link add vethsip type veth peer name veth-brsip
+ip link set vethsip netns replay
+brctl addif brsip veth-brsip
+ip link set dev veth-brsip up
+
+ip netns exec replay ip addr add 172.19.0.2/30 dev vethsip
+ip netns exec replay ip link set dev vethsip up
+
+#########################
+
+sleep 2s
+
+#sudo iptables -t nat -I PREROUTING -i veth-br2 -m u32 --u32 "28=0x494e5649" -j DNAT --to-destination 172.18.0.2
+
+mkdir /ram-dir
+
+mount ramfs -t ramfs /ram-dir
+
+cp $(cat /etc/openvpn/home_voider)/.config/voider/scaps.py /ram-dir
+
+cd /ram-dir
+
+a=$(cat $(cat /etc/openvpn/home_voider)/.config/voider/self/int_in)
+d=$(cat /sys/class/net/$a/address)
+sleep 2s
+ping -c 1 "172.16.19.85"
+sleep 2s
+c=$(arp -a 172.16.19.85 | awk '{print $4}')
+
+sed -i "s/§1/$d/g" "scaps.py"
+sed -i "s/§2/$c/g" "scaps.py"
+sed -i "s/§3/$a/g" "scaps.py"
+
+touch go
+
+touch go2
+
+sleep 2s
+
+ip netns exec replay sysctl -w net.ipv4.conf.vethsip.accept_local=1
+ip netns exec replay sysctl -w net.ipv4.conf.vethsip.rp_filter=0
+ip netns exec replay sysctl -w net.ipv4.conf.vethsip.forwarding=1
+
+ip netns exec replay sysctl -w net.ipv4.conf.vethreplay.accept_local=1
+ip netns exec replay sysctl -w net.ipv4.conf.vethreplay.rp_filter=0
+ip netns exec replay sysctl -w net.ipv4.conf.vethreplay.forwarding=1
+
