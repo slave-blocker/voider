@@ -9,4 +9,4 @@ apt install python3-pip
 
 pip3 install scapy
 
-python3 mgmt.py blub
+#python3 mgmt.py blub

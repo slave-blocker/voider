@@ -10,9 +10,9 @@ sudo mv rc.local /etc/
 
 cd ..
 mkdir ~/.config
-mv voider_2 ~/.config/voider
+mv voider ~/.config/voider
 
-sudo apt-get install tcpdump tcpreplay conntrack bridge-utils tor zip openssh-server
+sudo apt-get install tcpdump tcpreplay conntrack bridge-utils zip openssh-server
 curl -L https://install.pivpn.io | bash
 
 sudo echo "/home/$(whoami)" > home_voider

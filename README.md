@@ -22,7 +22,27 @@ Conference calls are now possible with the GXP1610!
  
 
 **How to install** :
- 
+
+wget https://cdimage.ubuntu.com/releases/22.04.3/release/ubuntu-22.04.4-preinstalled-server-arm64+raspi.img.xz
+
+xz -d ubuntu-22.04.4-preinstalled-server-arm64+raspi.img.xz
+
+write the image of ubuntu server to a micro sd card :
+
+sudo dd if=ubuntu-22.04.4-preinstalled-server-arm64+raspi.img of=/dev/sdX
+
+use a raspi 4 (usb to eth dongle has network conflicts at booting with raspi 3)
+
+ssh into the raspi 4; ssh ubuntu@ip; replace password *ubuntu*;
+
+ssh into the raspi 4 again; do : 
+
+sudo apt-get update;
+
+sudo apt-get install tor openvpn
+
+at the home directory execute :
+
 git clone https://github.com/slave-blocker/voider.git
 
 cd voider/voider
@@ -31,13 +51,22 @@ run as root :
 
 ./install_as_root.sh
 
-(there is still a bug on running python3 mgmt.py as root.
-run "python3 mgmt.py" 1 and "python3 mgmt.py" 2 until it returns no exceptions)
-
 run the install with the user that is going to have the scripts.
 
 ./install_as_user.sh (sudo password will be needed)
 
+sudo reboot
+
+ssh into the raspi 4 again; do :
+
+cd .config/voider
+
+sudo su
+
+python3 mgmt.py 1
+
+(there is still a bug on running python3 mgmt.py as root.
+run "#python3 mgmt.py" 1 and "#python3 mgmt.py" 2 until it returns no exceptions)
 
 **How to use** :
 
