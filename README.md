@@ -6,8 +6,9 @@ Direct Ip Calls, wich are ip agnostic.
 the private phone number on the phone itself is always : **172.16.19.85/30**
 the gateway is always : **172.16.19.86/30**.
 
-Being able to forward ports on your router makes you a senator.
+Being able to forward ports on your router makes you a senator. The second (buggy) version of this software allows for peers that do not port forward (citizens) to still connect over senators.
 
+In order to make sense of this install, the public ip address of the router used by the raspi 4, must forward port 1194 towards the raspi.
 No need for static ip addresses, .onion addresses are used as the 
 anchors.
 
