@@ -71,6 +71,11 @@ python3 mgmt.py
 there are still bugs on running python3 mgmt.py as root.
 run "#python3 mgmt.py" 1 and "#python3 mgmt.py" 2 until it returns no exceptions.
 
+if executing : "#python3 mgmt.py" then press 1 
+
+does not spit : "Something went wrong" then the install is successful. 
+
+
 **How to use** :
 
 Buy a GXP1610 IP phone.
