@@ -74,7 +74,7 @@ run "#python3 mgmt.py" 1 and "#python3 mgmt.py" 2 until it returns no exceptions
 
 Buy a GXP1610 IP phone.
 
-Install voider on a Raspberry Pi, or any Linux machine.
+Install voider on a Raspberry Pi 4, or any Linux machine.
 
 Connect the GXP1610 to the ethernet port of your machine.
 
