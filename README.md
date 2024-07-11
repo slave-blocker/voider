@@ -65,8 +65,10 @@ sudo su
 
 python3 mgmt.py
 
-(there are still bugs on running python3 mgmt.py as root.
-run "#python3 mgmt.py" 1 and "#python3 mgmt.py" 2 until it returns no exceptions)
+---this last step is needed, such that this peer is accessible over sftp over tor, to update the dynamic ipv4 address.--
+
+there are still bugs on running python3 mgmt.py as root.
+run "#python3 mgmt.py" 1 and "#python3 mgmt.py" 2 until it returns no exceptions.
 
 **How to use** :
 
