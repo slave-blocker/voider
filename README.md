@@ -9,8 +9,7 @@ the gateway is always : **172.16.19.86/30**.
 Being able to forward ports on your router makes you a senator. The second (buggy) version of this software allows for peers, that do not port forward (citizens), to still connect over senators.
 
 In order to make sense of this install, the public ip address of the router used by the raspi 4, must forward port 1194 towards the raspi.
-No need for static ip addresses, .onion addresses are used as the 
-anchors.
+
 
 Use the phone GXP1610. Other interoperable phones are still being searched. 
 
@@ -20,7 +19,7 @@ Conference calls are now possible with the GXP1610!
 
 (The conferencee makes a call to the 2nd participant. Then the 3rd participant, calls the person doing the conference (the line does not seem busy). The conferencee puts the current line on hold, picks up the other line, presses the conference button, and then selects the first line.)
 
- 
+No need for static ip addresses, .onion addresses are used as the anchors.
 
 **How to install** :
 
