@@ -63,9 +63,9 @@ cd .config/voider
 
 sudo su
 
-python3 mgmt.py 1
+python3 mgmt.py
 
-(there is still a bug on running python3 mgmt.py as root.
+(there are still bugs on running python3 mgmt.py as root.
 run "#python3 mgmt.py" 1 and "#python3 mgmt.py" 2 until it returns no exceptions)
 
 **How to use** :
