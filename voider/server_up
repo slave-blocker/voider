@@ -1,0 +1,26 @@
+#!/bin/bash
+
+########################################################################
+#not to be confused, the id of the client is the same throughout routes and iptables on the server side.
+#all of this can be setup without needing to worry if the tunnel is up or not :)
+callee1="10.1."$1".1"
+callee2="172.29."$1".1"
+client_endpoint="172.31.0."$1
+# nat into the bridge to fool conntrack :
+# 7000 + client idx 
+#172.16.40.12 -> 172.29.2.1
+mapping=$(sed "$1 q;d" /home/$(hostname)/.config/voider/clients/mapping_clients)
+portroute=$(( 7000 + $1 ))
+
+to_phone=$(cat /home/$(hostname)/.config/voider/self/int_in)
+
+iptables -w 2 -t nat -I PREROUTING -i $to_phone -p udp --dport 5060 -s 172.16.19.85 -d $callee1 -j DNAT --to 172.19.0.2:$portroute -m comment --comment "Normal sip"
+#Ack gets routed just like rtp:
+iptables -w 2 -t nat -A PREROUTING -i $to_phone -p udp --dport 5060 -s 172.16.19.85 -d $mapping -j DNAT --to 172.19.0.2:$portroute -m comment --comment "Normal sip"
+
+iptables -w 2 -t nat -A PREROUTING -i $to_phone -p udp ! --dport 5060 -s 172.16.19.85 -d $mapping -j DNAT --to $callee2 -m comment --comment "rtp"
+
+ip route add $callee2 via $client_endpoint
+ip netns exec replay ip route add $callee2 via 172.18.0.1
+ip netns exec replay iptables -w 2 -t nat -A PREROUTING -i vethsip -d 172.19.0.2 -p udp --dport $portroute -j DNAT --to-destination $callee2:5060
+

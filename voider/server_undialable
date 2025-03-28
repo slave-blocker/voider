@@ -1,0 +1,20 @@
+#!/bin/bash
+
+cd /home/$(hostname)/.config/voider/servers/servers/$1/
+#inside of the following dir is only one file :
+name_cert=$(ls ./cert/)
+client_name=$(echo $name_cert | sed 's/\..*//')
+str=$(sed "3 q;d" ./cert/$name_cert)
+str2=$(echo $str | sed 's/\/.*//')
+client_idx=$(echo $str2 | awk -F'.' '{print $4}')
+
+#TODO if the wireguard interface would stay present even if down, this would not need to be here :
+
+ip netns exec netns$1 iptables -w 2 -t nat -D POSTROUTING -o $client_name -p udp ! --dport 5060 -s 172.16.19.85 -d 172.29.1.1 -j SNAT --to-source 172.29.$client_idx.1
+ip netns exec netns$1 iptables -w 2 -t nat -D POSTROUTING -o $client_name -p udp --dport 5060 -s 172.18.0.2 -d 172.29.1.1 -j SNAT --to-source 172.29.$client_idx.1
+#out of the tunnel :
+
+ip netns exec netns$1 iptables -w 2 -t nat -D PREROUTING -i $client_name -d 172.29.$client_idx.1 -p udp ! --dport 5060 -j DNAT --to-destination 172.16.19.85
+ip netns exec netns$1 iptables -w 2 -t nat -D PREROUTING -i $client_name -d 172.29.$client_idx.1 -p udp --dport 5060 -j DNAT --to-destination 172.18.0.2
+
+ip netns exec netns$1 ip route del 172.29.1.1 via 172.31.0.1

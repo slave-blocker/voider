@@ -1,0 +1,10 @@
+auto lo
+iface lo inet loopback
+
+auto §0
+iface §0 inet dhcp
+        §2
+
+auto §1
+iface §1 inet static
+        address 172.16.19.86/30

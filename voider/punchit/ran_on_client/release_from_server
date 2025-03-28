@@ -1,0 +1,18 @@
+#!/bin/bash
+
+name_cert=$(ls /home/$(hostname)/.config/voider/servers/servers/$1/cert/)
+
+int_ip=$(cat /home/$(hostname)/.config/voider/self/localip)
+ext_ip=$(cat /home/$(hostname)/.config/voider/servers/servers/$1/ext_ip)
+rndsrcport=$(cat /home/$(hostname)/.config/voider/servers/servers/$1/rndsrcport)
+to_internet=$(cat /home/$(hostname)/.config/voider/self/int_out)
+
+
+echo $ext_ip
+
+iptables -w 2 -t nat -D POSTROUTING -o $to_internet -p udp --sport $rndsrcport -s 172.30.$1.2 -j SNAT --to-source $int_ip:$rndsrcport
+ip netns exec netns$1 ip route del "$ext_ip/32" via 172.30.$1.1
+iptables -w 2 -t nat -D PREROUTING -i $to_internet -s $ext_ip -j DNAT --to 172.30.$1.2
+            
+ip netns exec netns$1 wg-quick down /home/$(hostname)/.config/voider/servers/servers/$1/cert/$name_cert
+

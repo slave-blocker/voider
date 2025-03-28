@@ -1,0 +1,124 @@
+#!/bin/bash
+
+if [[ $1 -eq 1 ]]
+    then
+    if [[ -e /home/self ]]
+        then
+        echo "sftp to self exists" 
+        exit
+    fi
+
+
+    mkdir /var/sftp/ 
+    chown root:root /var/sftp
+    chmod 755 /var/sftp
+        
+    adduser -D self
+     
+    mkdir /var/sftp/self
+    chown root:root /var/sftp/self
+    chmod 755 /var/sftp/self
+            
+    mkdir /etc/ssh/voider/
+    cp /etc/ssh/sshd_config /etc/ssh/voider/backup
+
+    List="\n\n\nMatch User self
+    \nForceCommand internal-sftp
+    \nPasswordAuthentication no
+    \nChrootDirectory /var/sftp/self
+    \nPermitTunnel no
+    \nAllowAgentForwarding no
+    \nAllowTcpForwarding no
+    \nX11Forwarding no"
+    
+    mkdir /etc/ssh/voider/self
+    echo -e $List > "/etc/ssh/voider/self/conf"
+    
+    chown $(hostname):$(hostname) /etc/ssh/sshd_config
+
+    cat /etc/ssh/voider/backup > /etc/ssh/sshd_config
+
+    line_n=$(grep -n "#KbdInteractiveAuthentication" /etc/ssh/sshd_config  | cut -d : -f1)
+    sed -i "$line_n s?.*?KbdInteractiveAuthentication no?" /etc/ssh/sshd_config
+
+    line_n=$(grep -n "#PasswordAuthentication" /etc/ssh/sshd_config  | cut -d : -f1)
+    sed -i "$line_n s?.*?PasswordAuthentication no?" /etc/ssh/sshd_config
+
+    line_n=$(grep -n "/etc/ssh/ssh_host_ed25519_key" /etc/ssh/sshd_config  | cut -d : -f1)
+    sed -i "$line_n s?.*?HostKey /etc/ssh/ssh_host_ed25519_key?" /etc/ssh/sshd_config
+
+    line_n=$(grep -n "#UsePAM" /etc/ssh/sshd_config  | cut -d : -f1)
+    sed -i "$line_n s?.*?UsePAM yes?" /etc/ssh/sshd_config
+
+    cat /etc/ssh/voider/self/conf >> /etc/ssh/sshd_config
+
+    chown root:root /etc/ssh/sshd_config    
+
+        
+    cp /etc/tor/torrc /etc/tor/backup    
+ 
+    List2="\n\n\n
+    \nHiddenServiceDir /var/lib/tor/sshd/
+    \nHiddenServicePort 22 127.0.0.1:22"
+
+    rc-service tor stop
+    echo -e $List2 >> /etc/tor/torrc
+    rc-service tor start 
+
+    #this appears to take some time :
+    echo "waiting for /var/lib/tor/sshd/hostname"
+    echo "if you don't see \" continue \" shortly, then abort by ctrl + C."   
+    while [[ ! -e /var/lib/tor/sshd/hostname ]]
+        do
+    sleep 2    
+    done   
+    echo "continue"
+
+    cp /var/lib/tor/sshd/hostname /home/$(hostname)/.config/voider/self/onion
+  
+# create the ssh key for the clients to connect over tor.
+    mkdir /home/$(hostname)/.config/voider/self/sftp     
+    cd /home/$(hostname)/.config/voider/self/sftp
+
+    ssh-keygen -t ed25519 -b 384 -q -f self -N ""
+    chmod 600 self
+
+    mkdir /home/self/.ssh/
+    mv self.pub /home/self/.ssh/authorized_keys
+
+    cp /etc/security/limits.conf /etc/security/limits_backup.conf    
+
+    List3="\n\n\nself             hard    fsize           2
+\nself             hard    nproc           8
+\nself             hard    maxlogins       4\n
+"
+
+    echo -e $List3 >> /etc/security/limits.conf
+
+    doas usermod -p "Monero" self
+    passwd -u self
+    chsh -s /bin/false self 2>/dev/null
+    
+    rc-service sshd restart
+
+else   
+    
+    rm -rf /var/sftp
+
+    rm -rf /home/$(hostname)/.config/voider/self/sftp
+    
+    deluser --remove-home self
+             
+    cat /etc/ssh/voider/backup > /etc/ssh/sshd_config           
+    rm -rf /etc/ssh/voider
+
+    cat /etc/tor/backup > /etc/tor/torrc
+    rm /etc/tor/backup
+
+    cat /etc/security/limits_backup.conf > /etc/security/limits.conf
+    rm /etc/security/limits_backup.conf
+
+    rc-service tor restart
+    rc-service sshd restart
+
+fi

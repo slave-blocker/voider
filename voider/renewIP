@@ -1,0 +1,18 @@
+#!/bin/bash
+
+pub_ip=/home/$(hostname)/.config/voider/self/pub_ip
+new_pub_ip=/home/$(hostname)/.config/voider/self/new_pub_ip
+wget https://api.ipify.org -O $pub_ip
+sleep 60s
+while true
+    do
+    wget https://api.ipify.org -O $new_pub_ip
+    if [[ $(diff -q $new_pub_ip $pub_ip | wc -l ) -ne 0 ]]
+        then
+        mv $new_pub_ip $pub_ip
+    else
+        echo "Public ip address has not changed"    
+    fi
+    chronyc makestep
+    sleep 60s
+done

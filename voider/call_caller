@@ -1,0 +1,5 @@
+#!/sbin/openrc-run
+
+start(){
+/home/dollner/call_caller.sh
+}

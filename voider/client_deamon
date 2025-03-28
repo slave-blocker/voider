@@ -1,0 +1,195 @@
+#!/bin/bash
+
+setsrcport () {
+    while true
+        do
+        try_random=$RANDOM
+        if [[ $try_random -gt 1024 ]]
+            then
+            busy=$(netstat -tulpn | grep $try_random | wc -l)
+            if [[ $busy -eq 0 ]]
+                then                                    
+                echo -n $try_random > /home/$(hostname)/.config/voider/servers/servers/$1/rndsrcport
+                break
+            fi                    
+        fi
+    done
+}
+
+#1>/dev/null 2>/dev/null
+
+torify_sftp () {
+/usr/bin/torify sftp -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$1 -i $2 self@$3 1>/dev/null 2>/dev/null <<§
+put $4 "/$5"
+§
+}
+
+first=1
+while true
+    do
+    x=2
+    while [[ $x -le 254 ]]
+        do
+        #0->no server;1->server fresh;2->client_up;4->tunnel is up
+        
+        str=$(sed "$x q;d" /home/$(hostname)/.config/voider/servers/occupants)
+        if [[ ! $str -eq 0 ]]
+            then
+            if [[ $first -eq 1 ]]
+                then
+                sed -i "$x s/.*/1/" /home/$(hostname)/.config/voider/servers/occupants
+                rm /home/$(hostname)/.config/voider/servers/servers/$x/running 1>/dev/null 2>/dev/null
+            else
+                if [[ $str -eq 1 ]]
+                    then
+                    /home/$(hostname)/.config/voider/client_up $x        
+                    sed -i "$x s/.*/2/" /home/$(hostname)/.config/voider/servers/occupants
+                fi            
+                if [[ $str -eq 2 ]]
+                    then
+                    #since this is a subshell
+                    #place a semaphore such that the deamon won't start again here, if this is at work. 
+                    if [[ ! -e /home/$(hostname)/.config/voider/servers/servers/$x/running ]]
+                        then                    
+                        touch /home/$(hostname)/.config/voider/servers/servers/$x/running
+                        (
+                        
+                        #2nd semaphore for passing outer vars
+                        y=$x
+                        touch /home/$(hostname)/.config/voider/servers/servers/$y/green
+
+                        wg_cert=$(ls /home/$(hostname)/.config/voider/servers/servers/$y/cert/)
+                    
+                        str2=$(sed "3 q;d" /home/$(hostname)/.config/voider/servers/servers/$y/cert/$wg_cert)
+                        str22=$(echo $str2 | sed 's/\/.*//')
+                        idx=$(echo $str22 | awk -F'.' '{print $4}')                    
+                    
+                        onion=$(cat /home/$(hostname)/.config/voider/servers/servers/$y/tor/onion)
+                        sftp_cert="/home/$(hostname)/.config/voider/servers/servers/$y/sftp/self"
+                        #TODO test
+                        KnownHost="/home/$(hostname)/.config/voider/servers/servers/$y/sftp/host.pub"                   
+                        self_info="/home/$(hostname)/.config/voider/servers/servers/$y/self_info"                    
+                        rndsrcport="/home/$(hostname)/.config/voider/servers/servers/$y/rndsrcport"
+                        ext_info="/home/$(hostname)/.config/voider/servers/servers/$y/ext_info"
+                        ext_ip="/home/$(hostname)/.config/voider/servers/servers/$y/ext_ip"
+                        ext_port="/home/$(hostname)/.config/voider/servers/servers/$y/ext_port"
+                        rm $self_info
+                        rm $rndsrcport
+                        rm $ext_info
+                        rm $ext_ip                    
+                        rm $ext_port
+                        echo "before torify 1"
+                        #set own public ip and local src port
+                        cat /home/$(hostname)/.config/voider/self/pub_ip > $self_info
+                        #cat /home/$(hostname)/.config/voider/self/pub_ip > $self_info
+                        echo >> $self_info                        
+
+                        setsrcport $y 
+                        cat $rndsrcport >> $self_info
+                        #synchronize code execution of server and client 
+                        echo >> $self_info
+
+                        now=$(date "+%s")
+                        get_into_sync=$(( $now + 60 ))
+                        temp=$(( $get_into_sync - $now ))
+                        echo -n $get_into_sync >> $self_info                        
+                        echo >> $self_info                        
+
+                        #check if the server is up
+                        #try to sftp to it over tor
+                        echo "before torify 2"                        
+                        torify_sftp $KnownHost $sftp_cert $onion $self_info $idx &
+                        #ppid1=$?
+                        
+                        #this assumes that torify_sftp takes less than 60 secs 
+
+                        echo "sleeping into sync 1111 $get_into_sync"                       
+                        echo "sleeping into sync 2222 $temp"
+                        sleep $temp 
+                        echo "sync worked"
+
+                        echo "before torify 3"
+                        #give server time to write?
+                        sleep 2
+
+                        #get servers public ip and dst port and unix timestamp for future holepunching                    
+                        /usr/bin/torify sftp -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$KnownHost -i $sftp_cert self@$onion:"/$idx" $ext_info 1>/dev/null 2>/dev/null
+                        #ppid2=$?
+                        #sleep 20
+                        #kill -s 9 $ppid1 1>/dev/null 2>/dev/null
+                        #kill -s 9 $ppid2 1>/dev/null 2>/dev/null                    
+                    
+                        echo "before ext_info "
+                        if [[ -e $ext_info ]]
+                            then 
+                            echo "inside ext_info "
+                            #check if wc -l is 2 or else server has not written punching time...
+                            length=$(cat $ext_info | wc -l)
+                            echo "length " $length                        
+                            if [[ $length -eq 2 ]]
+                                then                            
+                                echo -n $(sed "1 q;d" $ext_info) > /home/$(hostname)/.config/voider/servers/servers/$y/ext_ip
+                                echo -n $(sed "2 q;d" $ext_info) > /home/$(hostname)/.config/voider/servers/servers/$y/ext_port
+                                punching_time=$(sed "3 q;d" $ext_info)                                            
+                            
+                                #sleep until punching time  
+                                now=$(date "+%s")
+                                temp=$(( $punching_time - $now ))       
+                                echo "$punching_time before punch_to_server sleep $temp"                                
+                                sleep $temp
+
+                            
+                                /home/$(hostname)/.config/voider/punchit/ran_on_client/punch_to_server $y
+                                sleep 3
+                                #for some reason this always takes at least two seconds
+                                #wait at least 4 seconds for a reply 
+                                ip netns exec netns$y ping -W 4 -c 1 172.31.0.1
+                                if [[ $? -eq 0 ]]   
+                                    then
+                                    echo "connected!"
+                                    sed -i "$y s/.*/4/" /home/$(hostname)/.config/voider/servers/occupants
+                                    /home/$(hostname)/.config/voider/server_dialable $y
+                                    echo "is dialable !"
+                                else    
+                                    /home/$(hostname)/.config/voider/punchit/ran_on_client/release_from_server $y    
+                                fi                           
+                            else                        
+                                echo "bad length"
+                            fi
+                        fi
+                        rm /home/$(hostname)/.config/voider/servers/servers/$y/running)& 
+                        while true
+                            do
+                            if [[ -e /home/$(hostname)/.config/voider/servers/servers/$x/green ]]
+                                then
+                                rm /home/$(hostname)/.config/voider/servers/servers/$x/green
+                                break
+                            fi
+                            sleep 0.1
+                        done                   
+                    fi                
+                fi
+                if [[ $str -eq 4 ]]
+                    then                
+                    ip netns exec netns$x ping -c 1 172.31.0.1
+                    if [[ $? -ne 0 ]]   
+                        then
+                        sed -i "$x s/.*/2/" /home/$(hostname)/.config/voider/servers/occupants                
+                        echo "removing previous iptable rules"
+                        ./ran_on_client/release_from_server $x
+                        /home/$(hostname)/.config/voider/server_undialable $x
+                    fi
+                fi
+            fi
+        fi
+    x=$(( $x + 1 ))
+    done
+
+if [[ $first -eq 1 ]]
+    then
+    first=0
+fi   
+
+sleep 5
+done
+

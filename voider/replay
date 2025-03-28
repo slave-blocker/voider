@@ -1,5 +1,7 @@
 #! /bin/bash
 
+iptables -t nat --flush
+
 ip netns add replay
 brctl addbr breplay
 ip addr add 172.18.0.1/30 dev breplay
@@ -15,7 +17,7 @@ ip netns exec replay ip addr add 172.18.0.2/30 dev vethreplay
 ip netns exec replay ip link set dev lo up
 ip netns exec replay ip link set dev vethreplay up
 
-###################
+#########################
 
 brctl addbr brsip
 ip addr add 172.19.0.1/30 dev brsip
@@ -30,24 +32,48 @@ ip netns exec replay ip link set dev vethsip up
 
 #########################
 
-sleep 2s
+ip netns exec replay ip route add default via 172.18.0.1
+iptables -w 2 -t nat -A POSTROUTING -o brsip -s 172.16.19.85 -j SNAT --to-source 172.18.0.2
 
-#sudo iptables -t nat -I PREROUTING -i veth-br2 -m u32 --u32 "28=0x494e5649" -j DNAT --to-destination 172.18.0.2
+# into the tunnel :
+iptables -w 2 -t nat -A POSTROUTING -o wg0 -s 172.16.19.85 -p udp ! --dport 5060 -j SNAT --to-source 172.29.1.1
+iptables -w 2 -t nat -A POSTROUTING -o wg0 -s 172.18.0.2 -p udp --dport 5060 -j SNAT --to-source 172.29.1.1
+
+# out of the tunnel :
+iptables -w 2 -t nat -A PREROUTING -i wg0 -d 172.29.1.1 -p udp ! --dport 5060 -j DNAT --to-destination 172.16.19.85
+iptables -w 2 -t nat -A PREROUTING -i wg0 -d 172.29.1.1 -p udp --dport 5060 -j DNAT --to-destination 172.18.0.2
+
+
+sleep 2s
 
 mkdir /ram-dir
 
 mount ramfs -t ramfs /ram-dir
 
-cp $(cat /etc/openvpn/home_voider)/.config/voider/scaps.py /ram-dir
+cp /home/$(hostname)/.config/voider/scaps.py /ram-dir/
+
+cp /home/$(hostname)/.config/voider/clients/mapping_clients /ram-dir/
+cp /home/$(hostname)/.config/voider/servers/mapping_servers /ram-dir/
 
 cd /ram-dir
 
-a=$(cat $(cat /etc/openvpn/home_voider)/.config/voider/self/int_in)
+a=$(cat /home/$(hostname)/.config/voider/self/int_in)
 d=$(cat /sys/class/net/$a/address)
-sleep 2s
-ping -c 1 "172.16.19.85"
-sleep 2s
-c=$(arp -a 172.16.19.85 | awk '{print $4}')
+
+while true
+    do
+
+    sleep 2s
+    ping -c 1 "172.16.19.85"
+    sleep 2s
+    c=$(arp -a 172.16.19.85 | awk '{print $4}')
+
+    if echo $c | grep -E -q "^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$"; 
+        then
+        echo "Valid MAC address"
+        break
+    fi
+done
 
 sed -i "s/§1/$d/g" "scaps.py"
 sed -i "s/§2/$c/g" "scaps.py"
@@ -59,11 +85,5 @@ touch go2
 
 sleep 2s
 
-ip netns exec replay sysctl -w net.ipv4.conf.vethsip.accept_local=1
-ip netns exec replay sysctl -w net.ipv4.conf.vethsip.rp_filter=0
-ip netns exec replay sysctl -w net.ipv4.conf.vethsip.forwarding=1
-
-ip netns exec replay sysctl -w net.ipv4.conf.vethreplay.accept_local=1
-ip netns exec replay sysctl -w net.ipv4.conf.vethreplay.rp_filter=0
-ip netns exec replay sysctl -w net.ipv4.conf.vethreplay.forwarding=1
+ip netns exec replay /home/$(hostname)/.config/voider/rp_filter_off
 

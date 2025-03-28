@@ -1,0 +1,20 @@
+#!/bin/bash
+
+ext_ip=$(cat /home/$(hostname)/.config/voider/clients/clients/$1/ext_ip)
+ext_port=$(cat /home/$(hostname)/.config/voider/clients/clients/$1/ext_port)
+rndsrcport=$(cat /home/$(hostname)/.config/voider/clients/clients/$1/rndsrcport)
+to_internet=$(cat /home/$(hostname)/.config/voider/self/int_out)
+
+# redirect -t nat from $port to 51820 . 
+iptables -w 2 -t nat -A PREROUTING -i $to_internet -p UDP --dport $rndsrcport -j REDIRECT --to-port 51820
+        
+echo "iptable redirect set"
+       
+conntrack -F
+
+echo "Monero" |  nc -w 1 -u -p $rndsrcport $ext_ip $ext_port
+echo "Monero" |  nc -w 1 -u -p $rndsrcport $ext_ip $ext_port
+echo "Monero" |  nc -w 1 -u -p $rndsrcport $ext_ip $ext_port
+
+conntrack -F
+

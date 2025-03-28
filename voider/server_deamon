@@ -1,0 +1,161 @@
+#!/bin/bash
+
+setsrcport () {
+    while true
+        do
+        try_random=$RANDOM
+        if [[ $try_random -gt 1024 ]]
+            then
+            busy=$(netstat -tulpn | grep $try_random | wc -l)
+            if [[ $busy -eq 0 ]]
+                then                                    
+                echo -n $try_random > /home/$(hostname)/.config/voider/clients/clients/$1/rndsrcport
+                break
+            fi                    
+        fi
+    done
+}
+
+/home/$(hostname)/.config/voider/renewIP 1>/dev/null 2>/dev/null &
+
+to_internet=$(cat /home/$(hostname)/.config/voider/self/int_out)
+first=1
+while true
+    do
+    x=2
+    while [[ $x -le 254 ]]
+        do
+        #0->no client;1->fresh client;2->server side up;4->tunnel is up
+
+        str=$(sed "$x q;d" /home/$(hostname)/.config/voider/clients/occupants)
+        if [[ ! $str -eq 0 ]]
+            then
+            if [[ $first -eq 1 ]]
+                then
+                sed -i "$x s/.*/1/" /home/$(hostname)/.config/voider/clients/occupants
+                rm /home/$(hostname)/.config/voider/clients/clients/$x/running 1>/dev/null 2>/dev/null
+            else
+                if [[ $str -eq 1 ]]
+                    then
+                    /home/$(hostname)/.config/voider/server_up $x        
+                    sed -i "$x s/.*/2/" /home/$(hostname)/.config/voider/clients/occupants        
+                fi            
+                if [[ $str -eq 2 ]]
+                    then
+                    #since this is a subshell
+                    #place a semaphore such that the deamon won't start again here, if this is at work. 
+                    if [[ ! -e /home/$(hostname)/.config/voider/clients/clients/$x/running ]]
+                        then                    
+                        touch /home/$(hostname)/.config/voider/clients/clients/$x/running
+                        (
+
+                        #2nd semaphore for passing outer vars
+                        y=$x
+                        touch /home/$(hostname)/.config/voider/clients/clients/$y/green
+                                                
+                        last_mod=$(date -r /var/sftp/self/$y  "+%s")
+                        now=$(date "+%s")
+                        temp=$(( $now - $last_mod ))
+                        echo "before temp -lt 58 " $temp
+                        if [[ $temp -lt 58 ]]
+                            then                    
+                            rndsrcport2="/home/$(hostname)/.config/voider/clients/clients/$y/rndsrcport"
+                            ext_ip="/home/$(hostname)/.config/voider/clients/clients/$y/ext_ip"
+                            ext_port="/home/$(hostname)/.config/voider/clients/clients/$y/ext_port"
+                            #check if wc -l is 3 or else client has not written sync time...
+                            length=$(cat /var/sftp/self/$y | wc -l)                        
+                            echo "before length -eq 3" $length                            
+                            if [[ $length -eq 3 ]]
+                                then
+                                echo "inside length -eq 3"                                
+                                echo $(sed "1 q;d" /var/sftp/self/$y) > $ext_ip
+                                echo $(sed "2 q;d" /var/sftp/self/$y) > $ext_port
+                                get_into_sync=$(sed "3 q;d" /var/sftp/self/$y)                              
+                                
+
+                                now=$(date "+%s")
+                                echo "$now get_into_sync $get_into_sync"                                                     
+                                
+                                
+                                temp=$(( $get_into_sync - $now ))
+                                
+                                echo "sleeping into sync 111 $get_into_sync"                      
+                                echo "sleeping into sync 222 $temp"
+                                if [[ $temp -gt 1 ]]
+                                    then                                
+                                    sleep $temp
+                                    echo "sync worked"
+                                    #now the server writes to /var/sftp/self/$y faster than the client can connect.
+                                    now=$(date "+%s")
+                                    punching_time=$(( $now + 60 ))
+                                    cat /home/$(hostname)/.config/voider/self/pub_ip > /var/sftp/self/$y
+                                    echo >> /var/sftp/self/$y                              
+
+                                    echo "before setsrcport"                                
+                                    setsrcport $y
+                                    cat $rndsrcport2 >> /var/sftp/self/$y
+                                    echo >> /var/sftp/self/$y
+
+                                    echo -n $punching_time >> /var/sftp/self/$y
+                                    #on average the client will get this file in about 30secs ?
+                                    now=$(date "+%s")
+                                    temp=$(( $punching_time - $now ))     
+                                    echo "$punching_time before punch_to_client sleep $temp"                                
+                                    sleep $temp
+
+                                    /home/$(hostname)/.config/voider/punchit/ran_on_server/punch_to_client $y
+                                    sleep 3  
+                                    ping -c 1 172.31.0.$y
+                                    if [[ $? -eq 0 ]]   
+                                        then
+                                        echo "connected!"
+                                        sed -i "$y s/.*/4/" /home/$(hostname)/.config/voider/clients/occupants
+                                        #client is always dialable, since wg0 is always up.
+                                        echo "is dialable !"
+                                    else
+                                        echo "failed to put the wireguard tunnel up"
+                                        iptables -w 2 -t nat -D PREROUTING -i $to_internet -p UDP --dport $(cat $rndsrcport2) -j REDIRECT --to-port 51820                
+                                    fi               
+                                else                        
+                                    echo "lost sync"
+                                fi
+                            else
+                                echo "bad length"                                    
+                            fi
+                        fi
+                        rm /home/$(hostname)/.config/voider/clients/clients/$y/running)&
+                        while true
+                            do
+                            if [[ -e /home/$(hostname)/.config/voider/clients/clients/$x/green ]]
+                                then
+                                rm /home/$(hostname)/.config/voider/clients/clients/$x/green
+                                break
+                            fi
+                            sleep 0.1
+                        done
+                    fi
+                fi
+                if [[ $str -eq 4 ]]
+                    then                
+                    ping -c 1 172.31.0.$x
+                    if [[ $? -ne 0 ]]   
+                        then
+                        sed -i "$x s/.*/2/" /home/$(hostname)/.config/voider/clients/occupants
+                        rndsrcport="/home/$(hostname)/.config/voider/clients/clients/$x/rndsrcport"
+                        echo "removing previous source port redirect"
+                        iptables -w 2 -t nat -D PREROUTING -i $to_internet -p UDP --dport $(cat $rndsrcport) -j REDIRECT --to-port 51820
+                    fi
+                fi
+            fi    
+        fi    
+    x=$(( $x + 1 ))
+    done
+
+if [[ $first -eq 1 ]]
+    then
+    first=0
+fi            
+
+sleep 10
+done
+
