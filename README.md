@@ -4,6 +4,7 @@
 
 
 Direct Ip Calls, wich are ip agnostic.
+srtp is natively supported by the phones.
 the private phone number on the phone itself is always : **172.16.19.85/30**
 the gateway is always : **172.16.19.86/30**.
 
@@ -98,6 +99,9 @@ etc
 
 etc
 
+Out of the box Grandstream phones should use rtp, to enable srtp, access your phones web interface
+and go to account -> audio settings and put srtp -> Enabled and forced.
+
 **There is no pbx being used, instead sip packets die before getting to the callee.
 And then some deep packet inspection happens. Replacing the 172.16.19.85 by a fake address.
 The packet is then replayed, by scapy and tcprewrite, towards the callee phone.**
@@ -116,6 +120,8 @@ This is not a problem since torify sftp for read and write are only a few second
 behind a different router with no configuration on your part is coming soonTM *
 
 Please do contact me for critics, suggestions, questions, kudos, and even mobbing attempts are welcome.
+
+Remember if your hardware is backdoored anyway, backdoored you are...
 
 @ irc   **monero-pt**
 
