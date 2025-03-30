@@ -99,8 +99,8 @@ etc
 
 etc
 
-Out of the box Grandstream phones should use rtp, to enable srtp, access your phones web interface
-and go to account -> audio settings and put srtp -> Enabled and forced.
+_Out of the box Grandstream phones should use rtp, to enable srtp, access your phones web interface
+and go to account -> audio settings and put srtp -> Enabled and forced_.
 
 **There is no pbx being used, instead sip packets die before getting to the callee.
 And then some deep packet inspection happens. Replacing the 172.16.19.85 by a fake address.
