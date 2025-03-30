@@ -5,8 +5,13 @@
 
 Direct Ip Calls, wich are ip agnostic.\
 srtp is natively supported by the phones.\
-the private phone number on the phone itself is always : **172.16.19.85/30**
+the private phone number on the phone itself is always : **172.16.19.85/30**\
 the gateway is always : **172.16.19.86/30**.
+
+(agnostic in the sense that on the good old phones you did not know who was calling you,\
+because old phones don't have a display. So it's _i got to hear it to believe it_ you will\
+see the call incoming from a specific fake ip address but you may or may not map that to\
+the callers ip address. So perhaps anonymous phone calls is a better term :)
 
 Disclaimer : 
 You need to already be using a linux machine to set this up.
