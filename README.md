@@ -3,7 +3,7 @@
 ![tiefer](tiefer.png)
 
 
-Direct Ip Calls, wich are ip agnostic.
+Direct Ip Calls, wich are ip agnostic.\
 srtp is natively supported by the phones.
 the private phone number on the phone itself is always : **172.16.19.85/30**
 the gateway is always : **172.16.19.86/30**.
