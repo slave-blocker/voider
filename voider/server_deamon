@@ -144,6 +144,7 @@ while true
                         rndsrcport="/home/$(hostname)/.config/voider/clients/clients/$x/rndsrcport"
                         echo "removing previous source port redirect"
                         iptables -w 2 -t nat -D PREROUTING -i $to_internet -p UDP --dport $(cat $rndsrcport) -j REDIRECT --to-port 51820
+                        conntrack -F                    
                     fi
                 fi
             fi    
