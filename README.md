@@ -139,9 +139,16 @@ After all is done, this Raspberry Pi will be a device to be thought of like the 
 
 ## Important Note
 
-A server passes its certificate for the SFTP over Tor, allowing its clients to connect with torsocks. A client with that certificate can only enter the Raspberry Pi via SFTP. The only login shell available for this user, called "self," is: `/bin/false`. Once logged into the SFTP chroot directory `/var/sftp/self/`, the user can only write to the files they see with `ls`, and only up to 2KB. The number of processes available for "self" on the server is 8 (should be 2 per SFTP connection), meaning only 4 SFTP connections can happen at the same time. This is not a problem since Torify SFTP for read and write operations typically only takes a few seconds.
+A server passes its certificate for the SFTP over Tor, allowing its clients to connect with torsocks. A client with that certificate can only enter the Raspberry Pi via SFTP. 
+
+- The only login shell available for this user, called "self," is: `/bin/false`.
+- Once logged into the SFTP chroot directory `/var/sftp/self/`, the user can only write to the files they see with `ls`, and only up to 2KB.
+- The number of processes available for "self" on the server is 8 (should be 2 per SFTP connection), meaning only 4 SFTP connections can happen at the same time. 
+
+This is not a problem since Torify SFTP for read and write operations typically only takes a few seconds.
 
 *Making voider mobile means you can just unplug it and turn it on in another house behind a different router with no configuration on your part. This feature is coming soon™.*
+
 
 ---
 
