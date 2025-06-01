@@ -1,142 +1,181 @@
-# voider
+```markdown
+# Voider
 
 ![tiefer](tiefer.png)
 
+---
 
-Direct Ip Calls, wich are ip agnostic.\
-srtp is natively supported by the phones.\
-the private phone number on the phone itself is always : **172.16.19.85/30**\
-the gateway is always : **172.16.19.86/30**.
+**Direct IP Calls.**  
+Calls are IP agnostic. SRTP is natively supported by the phones.  
+**Private phone number:** `172.16.19.85/30`  
+**Gateway:** `172.16.19.86/30`
 
-(agnostic in the sense that on the good old phones you did not know who was calling you,\
-because old phones don't have a display. So it's _i got to hear it to believe it_ you will\
-see the call incoming from a specific fake ip address but you may or may not map that to\
-the callers ip address. So perhaps anonymous phone calls is a better term. There is a "do not disturb" 
-feature wich you can use, the phone stays quiet and the caller gets a "busy" :)
+*Agnostic* in the sense that on the good old phones you did not know who was calling you, because old phones don't have a display.  
+You will see the call incoming from a specific fake IP address, but you may or may not map that to the caller’s real IP address.  
+So perhaps "anonymous phone calls" is a better term. There is even a **Do Not Disturb** feature: the phone stays quiet and the caller gets a busy signal.
 
+---
 
-Disclaimer : 
-You need to already be using a linux machine to set this up.
-You need to know how to ssh into a linux machine to set this up.
-After all is done this raspi will be a device to be thought of like the good old phones,
-as seen on the picture. This raspi will be a dedicated machine only for the phone.
-This software is based on the assumption that source ports are not filtered/changed outwards
-which is the case for most retail routers.
+### Disclaimer
 
+- You need to already be using a Linux machine for this setup.
+- You must know how to SSH into a Linux machine.
+- After setup, this Raspberry Pi (or similar device) will be dedicated solely to acting like the good old phones as shown in the picture.
+- This software assumes that source ports are not filtered/changed outwards, which is typically the case with most retail routers.
 
-**How to install** :
+---
 
-flash alpine linux :
+### How to Install
 
-dd if=alpine-rpi-3.20.3-aarch64.img of=/dev/sdX bs=4M
+1. **Flash Alpine Linux:**
 
-run setup-alpine
+   ```bash
+   dd if=alpine-rpi-3.20.3-aarch64.img of=/dev/sdX bs=4M
+   ```
 
-setup another user other than root, dhcp on eth0 is fine.
+2. **Run setup-alpine:**
 
-choose UTC as the timezone and chrony. This is crucial such that all devices are synced on the same timeline.
+   - Set up another user besides root (DHCP on eth0 is fine).
+   - Choose UTC as the timezone and install chrony. This is crucial so that all devices are synchronized.
 
-use the same micro sd card for the os (type mmcblk0).
+   *Note: Use the same micro SD card for the OS (device type mmcblk0).*
 
-* make sure to have a ssh cert to login to your raspi before continuing *
-* and do login before continuing, with that cert into the raspi a couple of times *
-* or else you might get locked out of the raspi once setup is done *
+3. **SSH Preparedness:**
 
-git clone https://github.com/slave-blocker/voider.git
+   - Make sure to have an SSH certificate to log in to your Raspberry Pi **before continuing**.
+   - Log in a couple of times using that certificate to avoid getting locked out after the setup.
 
-cd voider/voider
+4. **Clone the Repository:**
 
-as user :
+   ```bash
+   git clone https://github.com/slave-blocker/voider.git
+   cd voider/voider
+   ```
 
-doas ./install.sh
+5. **Installation Steps:**
 
-as root :
+   - **As a normal user:**
 
-(let it be wireguard, let quad9, no to ipv6 and at the end don't reboot, the script will do that for you)
+     ```bash
+     doas ./install.sh
+     ```
 
-./install_as_root.sh
+   - **As root:**
 
-**How to setup** :
+     *(Choose WireGuard, set quad9, disable IPv6 and at the end, don't reboot—the script will do that for you.)*
 
-~/$ cd .config/voider
+     ```bash
+     ./install_as_root.sh
+     ```
 
-choose interfaces :
+---
 
-(this will setup /etc/network/interfaces and then reboot)
-(the phone needs to be connected already with the raspi)
+### How to Setup
 
-after this reboot :
-~/$ cd .config/voider
+1. Change to the configuration directory:
 
-doas ./main.sh
+   ```bash
+   cd ~/.config/voider
+   ```
 
-this will setup the sftp connections over tor.
-once executing doas ./main.sh returns the available options you should be good to go.
+2. **Choose interfaces:**  
+   This sets up `/etc/network/interfaces` and then reboots. (Make sure the phone is already connected to the Raspberry Pi.)
 
-**How to use** :
+3. After reboot, return to the config directory:
 
-Buy a Grandstream IP phone, that has a Direct ip call feature. (tested with GXP1610)
+   ```bash
+   cd ~/.config/voider
+   ```
 
-Install voider on a Raspberry Pi, or any Linux machine.
+4. **Initialize Main Script:**  
 
-Connect a Grandstream phone to the usb dongle of your machine.
+   ```bash
+   doas ./main.sh
+   ```
 
-Run : 
+   This sets up the SFTP connections over Tor. Once `doas ./main.sh` returns the available options, you're all set.
 
-doas ./main.sh
+---
 
-to create new clients or to connect to servers.
-  
-Once connections exist to servers or clients,
-go to the phone and DIRECT IP CALL : 
+### How to Use
 
-10.1.2.1 ---> 1st client
+1. **Phone Hardware:**  
+   Buy a Grandstream IP phone that supports Direct IP Calling (tested with GXP1610).
 
-10.1.3.1 ---> 2nd client 
+2. **System Setup:**  
+   Install Voider on a Raspberry Pi or any Linux machine and connect the Grandstream phone to the USB dongle of your device.
 
-10.1.4.1 ---> 3rd client
+3. **Run the Main Script:**
 
-etc
+   ```bash
+   doas ./main.sh
+   ```
 
-10.2.1.1 ---> 1st server 
+   This creates new clients or connects to servers.
 
-10.3.1.1 ---> 2nd server 
+4. **Direct IP Call Usage:**
 
-10.4.1.1 ---> 3rd server
+   - **Clients:**  
+     • 1st client: `10.1.2.1`  
+     • 2nd client: `10.1.3.1`  
+     • 3rd client: `10.1.4.1`  
+     … etc.
 
-etc
+   - **Servers:**  
+     • 1st server: `10.2.1.1`  
+     • 2nd server: `10.3.1.1`  
+     • 3rd server: `10.4.1.1`  
+     … etc.
 
-_Out of the box Grandstream phones should use rtp, to enable srtp, access your phones web interface
-and go to account -> audio settings and put srtp -> Enabled and forced_.
+   **_Note:_** Out of the box, Grandstream phones use RTP. To enable SRTP, access your phone's web interface and navigate to:  
+   **Account → Audio Settings → SRTP** (set to "Enabled and Forced").
 
-**There is no pbx being used, instead sip packets die before getting to the callee.
-And then some deep packet inspection happens. Replacing the 172.16.19.85 by a fake address.
-The packet is then replayed, by scapy and tcprewrite, towards the callee phone.**
+---
 
-**Note**
+### Under The Hood
 
-A server passes its cert for the sftp over tor, for its clients to connect with torsocks.
-A client with that cert can only enter the raspi by sftp. The only login shell available for 
-this user in question called "self" is : /bin/false.
-Once he logs into the sftp chroot dir /var/sftp/self/ he can only write to the files he sees with ls.
-And only up to 2KB. The amount of processes made available for self on the server are 8 
-(should be 2 per sftp connection), meaning  only 4 sftp connections at the same time can happen.
-This is not a problem since torify sftp for read and write are only a few seconds. 
+There's **no PBX** involved. Instead:
+- SIP packets die before reaching the callee.
+- Deep packet inspection occurs where the real IP (`172.16.19.85`) is replaced by a fake address.
+- The packet is then replayed towards the callee phone via Scapy and tcprewrite.
 
-* making voider mobile, this is letting you just plug it off and turning it on, in another house 
-behind a different router with no configuration on your part is coming soonTM *
+---
 
-Please do contact me for critics, suggestions, questions, kudos, and even mobbing attempts are welcome.
+### Security Note
 
-Remember if your hardware is backdoored anyway, backdoored you are...
+- A server passes its certificate for SFTP over Tor so that its clients can connect using torsocks.
+- A client possessing the certificate can only log in via SFTP to the Raspberry Pi.
+- The user, named "self", has a restricted shell `/bin/false`.
+- Once logged into the SFTP chroot directory `/var/sftp/self/`, the user can only write to files listed by `ls` (up to 2KB per file).
+- Only 8 processes are available for "self" on the server (2 processes per SFTP connection), limiting simultaneous SFTP connections to 4.
+- This is acceptable since Torified SFTP sessions are only for read/write operations lasting a few seconds.
 
-@ irc   **monero-pt**
+*Future enhancement:* Making Voider mobile—just plug it in at a different house behind a new router with zero configuration on your part—is coming soon™.
 
-special thanks to Andreas Hein !
+---
 
-A do nation is the best nation !
+### Feedback
 
-**MONERO** :
+Please contact me for:
+- Criticisms
+- Suggestions
+- Questions
+- Kudos  
+Even mobbing attempts are welcome!
+
+Remember: If your hardware is backdoored, then you're backdoored anyway.
+
+IRC: **monero-pt**
+
+Special thanks to Andreas Hein!
+
+---
+
+### A Do Nation is the Best Nation!
+
+---
+
+### MONERO
 
 ![xmr](xmr.gif)
-
+```
