@@ -1,4 +1,3 @@
-```markdown
 # Voider
 
 ![tiefer](tiefer.png)
@@ -178,4 +177,3 @@ Special thanks to Andreas Hein!
 ### MONERO
 
 ![xmr](xmr.gif)
-```
