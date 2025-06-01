@@ -80,6 +80,10 @@ After all is done, this Raspberry Pi will be a device to be thought of like the 
 
 2. **Choose interfaces:**
 
+   ```bash
+   doas ./main.sh
+   ```
+   
    - (This will set up `/etc/network/interfaces` and then reboot.)
    - (The phone needs to be connected already with the Raspberry Pi.)
 
@@ -89,7 +93,7 @@ After all is done, this Raspberry Pi will be a device to be thought of like the 
    ~/$ cd .config/voider
    ```
 
-4. **Run the main script:**
+4. **Run the main script again:**
 
    ```bash
    doas ./main.sh
